@@ -33,6 +33,7 @@ final class CompileCommand extends ConfigAwareCommand
             mode: InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
             description: 'Target platform (OS family) to built',
             default: [],
+            /** @phpstan-ignore-next-line : PHPStan does not support Stringable types */
             suggestedValues: \array_map(\strval(...), $assemblies->getAvailableFamilies()),
         );
 
@@ -42,6 +43,7 @@ final class CompileCommand extends ConfigAwareCommand
             mode: InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
             description: 'Target CPU architecture to built',
             default: [],
+            /** @phpstan-ignore-next-line : PHPStan does not support Stringable types */
             suggestedValues: \array_map(\strval(...), $assemblies->getAvailableArchitectures()),
         );
 
@@ -51,6 +53,7 @@ final class CompileCommand extends ConfigAwareCommand
             mode: InputOption::VALUE_REQUIRED,
             description: 'PHP edition (different set of extensions) for assembly',
             default: 'minimal',
+            /** @phpstan-ignore-next-line : PHPStan does not support Stringable types */
             suggestedValues: \array_map(\strval(...), $assemblies->getAvailableEditions()),
         );
 
@@ -86,12 +89,12 @@ final class CompileCommand extends ConfigAwareCommand
 
         $assemblies = AssemblyCollection::createFromBuiltinAssemblies();
 
-
         // ---------------------------------------------------------------------
         //  Platforms
         // ---------------------------------------------------------------------
         if (($platforms = $input->getOption('platform')) !== []) {
             $assemblies = $assemblies->withExpectedFamilies(
+                /** @phpstan-ignore-next-line : PHPStan does not support array_map types */
                 families: \array_map(Family::from(...), $platforms),
             );
         }
@@ -101,12 +104,12 @@ final class CompileCommand extends ConfigAwareCommand
             $output->writeln('   ↳ <info>' . $family . '</info>');
         }
 
-
         // ---------------------------------------------------------------------
         //  Architectures
         // ---------------------------------------------------------------------
         if (($architectures = $input->getOption('arch')) !== []) {
             $assemblies = $assemblies->withExpectedArchitectures(
+                /** @phpstan-ignore-next-line : PHPStan does not support array_map types */
                 architectures: \array_map(Architecture::from(...), $architectures),
             );
         }
@@ -116,11 +119,11 @@ final class CompileCommand extends ConfigAwareCommand
             $output->writeln('   ↳ <info>' . $architecture . '</info>');
         }
 
-
         // ---------------------------------------------------------------------
         //  Edition
         // ---------------------------------------------------------------------
         $assemblies = $assemblies->withExpectedEdition(
+            /** @phpstan-ignore-next-line : edition option is string */
             edition: Edition::from($input->getOption('edition')),
         );
 
@@ -132,7 +135,7 @@ final class CompileCommand extends ConfigAwareCommand
         if ($assemblies->count() === 0) {
             return $this->fail($output, new \RuntimeException(
                 message: 'There are no builds available for the specified'
-                    . ' combination of OS family and CPU architecture'
+                    . ' combination of OS family and CPU architecture',
             ));
         }
 
@@ -143,6 +146,7 @@ final class CompileCommand extends ConfigAwareCommand
             $config->output,
         ));
 
+        /** @var string|\Stringable $data */
         foreach ($workflow->process($config, $assemblies) as $data => $status) {
             switch ($status) {
                 case ClearBuildAssemblyDirectoryStatus::ReadyToClean:

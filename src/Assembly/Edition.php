@@ -30,6 +30,8 @@ final readonly class Edition implements EditionInterface
 
     /**
      * @api
+     *
+     * @param non-empty-string $name
      */
     public static function tryFrom(string $name): ?BuiltinEdition
     {
@@ -38,6 +40,8 @@ final readonly class Edition implements EditionInterface
 
     /**
      * @api
+     *
+     * @param non-empty-string $name
      */
     public static function from(string $name): EditionInterface
     {
@@ -46,6 +50,7 @@ final readonly class Edition implements EditionInterface
 
     /**
      * @api
+     *
      * @return non-empty-list<EditionInterface>
      */
     public static function cases(): array

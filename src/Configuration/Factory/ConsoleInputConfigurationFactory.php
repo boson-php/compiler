@@ -15,13 +15,20 @@ final readonly class ConsoleInputConfigurationFactory implements ConfigurationFa
 
     /**
      * @param non-empty-string $name
+     *
      * @return non-empty-string|null
      */
     private function getOptionValue(string $name): ?string
     {
         $input = $this->input;
 
-        if ($input->hasOption($name) && ($value = $input->getOption($name)) !== '') {
+        if ($input->hasOption($name)) {
+            $value = $input->getOption($name);
+
+            if (!\is_string($value) || $value === '') {
+                return null;
+            }
+
             return $value;
         }
 
