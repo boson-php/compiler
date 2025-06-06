@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler;
 
-use Boson\Component\Compiler\Assembly\AssemblyArchitecture;
-use Boson\Component\Compiler\Assembly\AssemblyPlatform;
 use Boson\Component\Compiler\Configuration\IncludeConfiguration;
 
 final class Configuration
@@ -33,16 +31,6 @@ final class Configuration
      * @var non-empty-string|null
      */
     public const ?string DEFAULT_APP_DIRECTORY = null;
-
-    /**
-     * @var list<AssemblyArchitecture>
-     */
-    public private(set) array $architectures;
-
-    /**
-     * @var list<AssemblyPlatform>
-     */
-    public private(set) array $platforms;
 
     /**
      * @var list<IncludeConfiguration>
@@ -141,9 +129,7 @@ final class Configuration
     /**
      * @param iterable<mixed, IncludeConfiguration> $build
      * @param iterable<non-empty-string, scalar> $ini
-     * @param iterable<mixed, AssemblyArchitecture> $architectures
-     * @param iterable<mixed, AssemblyPlatform> $platforms
-     * @param non-empty-string|null $output
+     * @param non-empty-string|null $temp
      * @param non-empty-string|null $root
      */
     public function __construct(
@@ -159,18 +145,14 @@ final class Configuration
          * @var non-empty-string
          */
         public private(set) string $boxVersion = self::DEFAULT_BOX_VERSION,
-        ?string $output = self::DEFAULT_BUILD_DIRECTORY,
+        ?string $temp = self::DEFAULT_BUILD_DIRECTORY,
         ?string $root = self::DEFAULT_APP_DIRECTORY,
-        iterable $architectures = [],
-        iterable $platforms = [],
         iterable $build = [],
         iterable $ini = [],
     ) {
         $this->build = \iterator_to_array($build, false);
         $this->ini = \iterator_to_array($ini, true);
-        $this->architectures = \iterator_to_array($architectures, false);
-        $this->platforms = \iterator_to_array($platforms, false);
-        $this->output = $output;
+        $this->output = $temp;
         $this->root = $root;
     }
 
@@ -249,48 +231,6 @@ final class Configuration
     {
         $self = clone $this;
         $self->build[] = $config;
-
-        return $self;
-    }
-
-    /**
-     * @param iterable<mixed, AssemblyArchitecture|non-empty-string> $architectures
-     */
-    public function withArchitectures(iterable $architectures): self
-    {
-        $self = clone $this;
-        $self->architectures = [];
-
-        foreach ($architectures as $architecture) {
-            if (\is_string($architecture)) {
-                $architecture = AssemblyArchitecture::tryFromNormalized($architecture);
-            }
-
-            if ($architecture !== null) {
-                $self->architectures[] = $architecture;
-            }
-        }
-
-        return $self;
-    }
-
-    /**
-     * @param iterable<mixed, AssemblyPlatform|non-empty-string> $platforms
-     */
-    public function withPlatforms(iterable $platforms): self
-    {
-        $self = clone $this;
-        $self->platforms = [];
-
-        foreach ($platforms as $platform) {
-            if (\is_string($platform)) {
-                $platform = AssemblyPlatform::tryFromNormalized($platform);
-            }
-
-            if ($platform !== null) {
-                $self->platforms[] = $platform;
-            }
-        }
 
         return $self;
     }

@@ -24,8 +24,6 @@ use JsonSchema\Validator;
  *     output?: non-empty-string,
  *     root?: non-empty-string,
  *     box-version?: non-empty-string,
- *     arch?: list<non-empty-string>,
- *     platform?: list<non-empty-string>,
  *     build?: object{
  *         files: list<RawFileInclusionType>,
  *         directories: list<RawDirectoryInclusionType>,
@@ -231,14 +229,6 @@ final class JsonConfigurationFactory implements ConfigurationFactoryInterface
                     }
                 }
             }
-        }
-
-        if (\property_exists($data, 'arch')) {
-            $config = $config->withArchitectures($data->arch);
-        }
-
-        if (\property_exists($data, 'platform')) {
-            $config = $config->withPlatforms($data->platform);
         }
 
         if (\property_exists($data, 'ini')) {
