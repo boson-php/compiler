@@ -191,7 +191,7 @@ final class CompileCommand extends ConfigAwareCommand
             $config->output,
         ));
 
-        /** @var string|\Stringable $data */
+        /** @var \Stringable|string $data */
         foreach ($workflow->process($config, $assemblies) as $data => $status) {
             switch ($status) {
                 case ClearBuildAssemblyDirectoryStatus::ReadyToClean:
