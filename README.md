@@ -1,5 +1,5 @@
 <a href="https://github.com/boson-php/boson">
-    <img align="center" src="https://github.com/user-attachments/assets/169b6bf1-4644-4873-ac4e-6448b36dc2a5" />
+    <img align="center" src="https://habrastorage.org/webt/-8/h1/5o/-8h15o6klbga13kzsltqqmk8jlm.png" />
 </a>
 
 ---
