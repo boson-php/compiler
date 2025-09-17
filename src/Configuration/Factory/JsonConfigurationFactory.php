@@ -268,7 +268,6 @@ final class JsonConfigurationFactory implements ConfigurationFactoryInterface
          */
         $notDirectories = $inclusion->{'not-directory'} ?? [];
 
-        /** @phpstan-ignore-next-line : False-positive; null-coalescence using */
         $names = $inclusion->name ?? [];
 
         /**
