@@ -18,6 +18,12 @@ if (\is_file(__DIR__ . '/libboson-windows-x86_64.dll')) {
     Phar::mount('libboson-windows-x86_64.dll', __DIR__ . '/libboson-windows-x86_64.dll');
 }
 
+foreach ({mount} as $directory) {
+    if (\is_dir(__DIR__ . '/' . $directory)) {
+        Phar::mount($directory, __DIR__ . '/' . $directory);
+    }
+}
+
 Phar::interceptFileFuncs();
 
 require 'phar://{name}.phar/{entrypoint}';

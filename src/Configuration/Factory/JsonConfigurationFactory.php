@@ -28,6 +28,7 @@ use JsonSchema\Validator;
  *     box-version?: non-empty-string,
  *     arch?: list<non-empty-string>,
  *     platform?: list<non-empty-string>,
+ *     mount?: list<non-empty-string>,
  *     build?: object{
  *         files: list<RawFileInclusionType>,
  *         directories: list<RawDirectoryInclusionType>,
@@ -280,6 +281,15 @@ final class JsonConfigurationFactory implements ConfigurationFactoryInterface
              */
             foreach ((array) $data->ini as $iniConfig => $iniValue) {
                 $config = $config->withAddedIni($iniConfig, $iniValue);
+            }
+        }
+
+        if (\property_exists($data, 'mount')) {
+            /**
+             * @var non-empty-string $mountDirectory
+             */
+            foreach ((array) $data->mount as $mountDirectory) {
+                $config = $config->withAddedMount($mountDirectory);
             }
         }
 

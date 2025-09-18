@@ -42,6 +42,15 @@
                 "description": "The name of expected OS family"
             }
         },
+        "mount": {
+            "type": "array",
+            "description": "List of mount directories",
+            "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Relative directory name"
+            }
+        },
         "build": {
             "type": "object",
             "description": "Configuration of included files to build",

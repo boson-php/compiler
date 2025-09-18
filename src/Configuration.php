@@ -77,6 +77,13 @@ final class Configuration
     public private(set) array $ini;
 
     /**
+     * List of mount directories.
+     *
+     * @var list<non-empty-string>
+     */
+    public private(set) array $mount;
+
+    /**
      * Output directory for compiled files.
      *
      * If not specified, defaults to 'build' subdirectory in root.
@@ -191,6 +198,7 @@ final class Configuration
      * @param iterable<non-empty-string, scalar> $ini
      * @param iterable<mixed, AssemblyArchitecture> $architectures
      * @param iterable<mixed, AssemblyPlatform> $platforms
+     * @param iterable<mixed, non-empty-string> $mount
      * @param non-empty-string|null $output
      * @param non-empty-string|null $root
      */
@@ -213,15 +221,14 @@ final class Configuration
         iterable $platforms = [],
         iterable $build = [],
         iterable $ini = [],
-        /**
-         * @var int<0, max>
-         */
+        iterable $mount = [],
         public private(set) int $timestamp = \PHP_INT_MAX,
     ) {
         $this->build = \iterator_to_array($build, false);
         $this->ini = \iterator_to_array($ini, true);
         $this->architectures = \iterator_to_array($architectures, false);
         $this->platforms = \iterator_to_array($platforms, false);
+        $this->mount = \iterator_to_array($mount, false);
         $this->output = $output;
         $this->root = $root;
     }
@@ -308,6 +315,19 @@ final class Configuration
     {
         $self = clone $this;
         $self->ini[$config] = $value;
+
+        return $self;
+    }
+
+    /**
+     * Returns copy of an instance with an additional mount directory.
+     *
+     * @param non-empty-string $directory
+     */
+    public function withAddedMount(string $directory): self
+    {
+        $self = clone $this;
+        $self->mount[] = $directory;
 
         return $self;
     }

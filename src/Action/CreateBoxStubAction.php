@@ -28,19 +28,28 @@ final readonly class CreateBoxStubAction implements ActionInterface
 
     private function getSharedStubTimestamp(Configuration $config): int
     {
-        if (\is_file($config->boxStubPathname)) {
-            return \filemtime($config->boxStubPathname);
+        if (\is_file($config->boxStubPathname) && ($time = \filemtime($config->boxStubPathname)) !== false) {
+            return $time;
         }
 
         return \PHP_INT_MIN;
     }
 
+    private function applyVariables(Configuration $config, string $content): string
+    {
+        return \str_replace(
+            search: ['{name}', '{entrypoint}', '{mount}'],
+            replace: [$config->name, $config->entrypoint, \var_export($config->mount, true)],
+            subject: $content,
+        );
+    }
+
     private function shareStubFile(Configuration $config): void
     {
-        \file_put_contents($config->boxStubPathname, \str_replace(
-            search: ['{name}', '{entrypoint}'],
-            replace: [$config->name, $config->entrypoint],
-            subject: (string) @\file_get_contents(self::LOCAL_STUB_PATHNAME),
-        ));
+        $stub = (string) @\file_get_contents(self::LOCAL_STUB_PATHNAME);
+
+        $stub = $this->applyVariables($config, $stub);
+
+        \file_put_contents($config->boxStubPathname, $stub);
     }
 }
