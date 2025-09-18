@@ -11,18 +11,36 @@ use Boson\Component\Compiler\Configuration;
  */
 final readonly class CreateBoxStubAction implements ActionInterface
 {
+    private const string LOCAL_STUB_PATHNAME = __DIR__ . '/../../resources/stub.php';
+
     public function process(Configuration $config): iterable
     {
         yield CreateBoxStubStatus::ReadyToCreate;
 
-        $stub = \str_replace(
-            search: ['{name}', '{entrypoint}'],
-            replace: [$config->name, $config->entrypoint],
-            subject: (string) @\file_get_contents(__DIR__ . '/../../resources/stub.php'),
-        );
-
-        \file_put_contents($config->boxStubPathname, $stub);
+        // Update stub in case of configuration file
+        // is more relevant than stub.
+        if ($this->getSharedStubTimestamp($config) < $config->timestamp) {
+            $this->shareStubFile($config);
+        }
 
         yield CreateBoxStubStatus::Created;
+    }
+
+    private function getSharedStubTimestamp(Configuration $config): int
+    {
+        if (\is_file($config->boxStubPathname)) {
+            return \filemtime($config->boxStubPathname);
+        }
+
+        return \PHP_INT_MIN;
+    }
+
+    private function shareStubFile(Configuration $config): void
+    {
+        \file_put_contents($config->boxStubPathname, \str_replace(
+            search: ['{name}', '{entrypoint}'],
+            replace: [$config->name, $config->entrypoint],
+            subject: (string) @\file_get_contents(self::LOCAL_STUB_PATHNAME),
+        ));
     }
 }

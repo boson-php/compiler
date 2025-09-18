@@ -107,15 +107,43 @@ final class JsonConfigurationFactory implements ConfigurationFactoryInterface
 
     private function readConfigAsJsonString(Configuration $config): ?string
     {
+        $pathname = $this->getConfigPathname($config);
+
+        if ($pathname === null) {
+            return null;
+        }
+
+        return $this->readConfigAsJsonStringFromReadable($pathname);
+    }
+
+    private function getConfigPathname(Configuration $config): ?string
+    {
         if (\is_readable($pathname = $config->root . '/' . $this->filename)) {
-            return $this->readConfigAsJsonStringFromReadable($pathname);
+            return $pathname;
         }
 
         if (\is_readable($pathname = $this->filename)) {
-            return $this->readConfigAsJsonStringFromReadable($pathname);
+            return $pathname;
         }
 
         return null;
+    }
+
+    private function getConfigTimestamp(Configuration $config): ?int
+    {
+        $pathname = $this->getConfigPathname($config);
+
+        if ($pathname === null) {
+            return null;
+        }
+
+        $time = \filemtime($pathname);
+
+        if ($time === false) {
+            return null;
+        }
+
+        return $time;
     }
 
     /**
@@ -173,6 +201,10 @@ final class JsonConfigurationFactory implements ConfigurationFactoryInterface
         }
 
         $this->validateConfigOrFail($data);
+
+        if (($time = $this->getConfigTimestamp($config)) !== null) {
+            $config = $config->withTimestamp($time);
+        }
 
         if (\property_exists($data, 'name')) {
             $config = $config->withName($data->name);

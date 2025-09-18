@@ -66,11 +66,8 @@ final class InitCommand extends ConfigAwareCommand
                     ],
                     [
                         'directory' => 'vendor',
+                        'not-directory' => 'vendor/boson-php/compiler',
                         'name' => '*.php',
-                    ],
-                    [
-                        'directory' => 'vendor/boson-php/runtime/resources/dist',
-                        'name' => '*.js',
                     ],
                 ],
             ],

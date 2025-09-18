@@ -213,6 +213,10 @@ final class Configuration
         iterable $platforms = [],
         iterable $build = [],
         iterable $ini = [],
+        /**
+         * @var int<0, max>
+         */
+        public private(set) int $timestamp = \PHP_INT_MAX,
     ) {
         $this->build = \iterator_to_array($build, false);
         $this->ini = \iterator_to_array($ini, true);
@@ -361,6 +365,17 @@ final class Configuration
                 $self->platforms[] = $platform;
             }
         }
+
+        return $self;
+    }
+
+    /**
+     * Returns copy of an instance with an additional config's timestamp.
+     */
+    public function withTimestamp(int $timestamp): self
+    {
+        $self = clone $this;
+        $self->timestamp = $timestamp;
 
         return $self;
     }
