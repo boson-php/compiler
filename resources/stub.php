@@ -18,11 +18,19 @@ if (\is_file(__DIR__ . '/libboson-windows-x86_64.dll')) {
     Phar::mount('libboson-windows-x86_64.dll', __DIR__ . '/libboson-windows-x86_64.dll');
 }
 
-foreach ({mount} as $directory) {
-    if (\is_dir(__DIR__ . '/' . $directory)) {
-        Phar::mount($directory, __DIR__ . '/' . $directory);
+foreach ({mount} as $mountEntrypoint) {
+    if (!\is_file(__DIR__ . '/' . $mountEntrypoint)) {
+        continue;
     }
+
+    if (!\is_dir(__DIR__ . '/' . $mountEntrypoint) && !\str_contains('.', $mountEntrypoint)) {
+        \mkdir(__DIR__ . '/' . $mountEntrypoint);
+    }
+
+    Phar::mount($mountEntrypoint, __DIR__ . '/' . $mountEntrypoint);
 }
+
+unset($mountEntrypoint);
 
 Phar::interceptFileFuncs();
 
