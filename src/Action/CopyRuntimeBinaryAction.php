@@ -47,7 +47,7 @@ final readonly class CopyRuntimeBinaryAction extends AssemblyAction
      */
     private function getSourceRuntimeBinary(): string
     {
-        return InstalledVersions::getInstallPath('boson-php/runtime')
+        return InstalledVersions::getInstallPath('boson-php/saucer')
             . \DIRECTORY_SEPARATOR . 'bin'
             . \DIRECTORY_SEPARATOR . $this->assembly->frontend;
     }
