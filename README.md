@@ -26,20 +26,20 @@ composer require boson-php/compiler
 
 ## Documentation
 
-- You can learn more [about what a Boson is](https://bosonphp.com/doc/0.17/introduction).
-- Information [about the configs](https://bosonphp.com/doc/0.17/configuration) is 
-  available on the [corresponding pages](https://bosonphp.com/doc/0.17/application-configuration).
-- A more detailed description of working with the [application](https://bosonphp.com/doc/0.17/application), 
-  [windows](https://bosonphp.com/doc/0.17/window) and [webview](https://bosonphp.com/doc/0.17/webview) 
+- You can learn more [about what a Boson is](https://bosonphp.com/doc/0.19/introduction).
+- Information [about the configs](https://bosonphp.com/doc/0.19/configuration) is 
+  available on the [corresponding pages](https://bosonphp.com/doc/0.19/application-configuration).
+- A more detailed description of working with the [application](https://bosonphp.com/doc/0.19/application), 
+  [windows](https://bosonphp.com/doc/0.19/window) and [webview](https://bosonphp.com/doc/0.19/webview) 
   is also available.
 - Also, do not miss the detailed guide on additional apps for working with 
-  [function bindings](https://bosonphp.com/doc/0.17/bindings-api),
-  [scripts](https://bosonphp.com/doc/0.17/scripts-api),
-  [request interception](https://bosonphp.com/doc/0.17/schemes-api), and more.
+  [function bindings](https://bosonphp.com/doc/0.19/bindings-api),
+  [scripts](https://bosonphp.com/doc/0.19/scripts-api),
+  [request interception](https://bosonphp.com/doc/0.19/schemes-api), and more.
 - If you want to build an application based on 
-  [Symfony](https://bosonphp.com/doc/0.17/symfony-adapter), 
-  [Laravel](https://bosonphp.com/doc/0.17/laravel-adapter) and 
-  [others](https://bosonphp.com/doc/0.17/psr7-adapter), 
+  [Symfony](https://bosonphp.com/doc/0.19/symfony-adapter), 
+  [Laravel](https://bosonphp.com/doc/0.19/laravel-adapter) and 
+  [others](https://bosonphp.com/doc/0.19/psr7-adapter), 
   then similar functionality is also available.
 
 ## Community
@@ -50,5 +50,5 @@ composer require boson-php/compiler
 ## Contributing
 
 Boson is an Open Source, [community-driven project](https://github.com/boson-php/boson/graphs/contributors). 
-Join them [contributing code](https://bosonphp.com/doc/0.17/contribution).
+Join them [contributing code](https://bosonphp.com/doc/0.19/contribution).
 
