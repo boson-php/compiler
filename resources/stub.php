@@ -28,8 +28,6 @@ unset($mountEntrypoint);
 
 Phar::interceptFileFuncs();
 
-$_SERVER['SCRIPT_FILENAME'] = 'phar://{name}.phar/{entrypoint}';
-
 require 'phar://{name}.phar/{entrypoint}';
 
 __HALT_COMPILER();
