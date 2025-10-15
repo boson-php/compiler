@@ -23,66 +23,83 @@ final readonly class PackApplicationWorkflowPresenter extends ConsolePresenter
         parent::__construct(new PackApplicationWorkflow());
     }
 
-    public function process(Configuration $config, SymfonyStyle $style): void
+    private function write(SymfonyStyle $style, ProgressBar $progress, string $message): void
+    {
+        if ($style->isDebug()) {
+            $style->writeln($message);
+
+            return;
+        }
+
+        $progress->setMessage($message);
+        $progress->advance();
+    }
+
+    private function createProgress(SymfonyStyle $style): ProgressBar
     {
         $progress = new ProgressBar($style);
-        $progress->setFormat('[%bar%] %message%');
+        $progress->clear();
+        $progress->setFormat('   [%bar%] %message%');
+        $progress->clear();
+
+        return $progress;
+    }
+
+    public function process(Configuration $config, SymfonyStyle $style): void
+    {
+        $progress = $this->createProgress($style);
 
         /** @var string|\Stringable $data */
         foreach ($this->workflow->process($config) as $data => $process) {
             switch ($process) {
                 case CreateBuildDirectoryStatus::ReadyToCreate:
-                    $style->write(' · Checking build directory');
+                    $this->write($style, $progress, ' · Checking build directory');
                     break;
 
                 case CreateBuildDirectoryStatus::Created:
-                    $style->writeln(\sprintf(
-                        "\33[2K\r <info>●</info> Build directory \"<comment>%s</comment>\" is available",
+                    $this->write($style, $progress, \sprintf(
+                        '   <info>●</info> Build directory "<comment>%s</comment>" is available',
                         $config->output,
                     ));
                     break;
 
                 case CreateBoxConfigStatus::ReadyToCreate:
-                    $style->write(' · Checking box config');
+                    $this->write($style, $progress, ' · Checking box config');
                     break;
 
                 case CreateBoxConfigStatus::Created:
-                    $style->writeln(\sprintf(
-                        "\33[2K\r <info>●</info> Config \"<comment>%s</comment>\" is created",
+                    $this->write($style, $progress, \sprintf(
+                        '   <info>●</info> Config "<comment>%s</comment>" is created',
                         $config->boxConfigPathname,
                     ));
                     break;
 
                 case DownloadBoxStatus::ReadyToDownload:
-                    $style->write(' · Checking <comment>humbug/box</comment> installation');
+                    $this->write($style, $progress, ' · Checking <comment>humbug/box</comment> installation');
                     break;
 
                 case DownloadBoxStatus::Downloading:
-                    $progress->setMessage('Downloading <comment>humbug/box</comment>');
-                    $progress->advance();
+                    $this->write($style, $progress, 'Downloading <comment>humbug/box</comment>');
                     break;
 
                 case DownloadBoxStatus::Complete:
-                    $progress->clear();
-                    $style->writeln(\sprintf(
-                        "\33[2K\r <info>●</info> The \"<comment>humbug/box</comment>\" <info>v%s</info> is ready",
+                    $this->write($style, $progress, \sprintf(
+                        '   <info>●</info> The "<comment>humbug/box</comment>" <info>v%s</info> is ready',
                         $config->boxVersion,
                     ));
                     break;
 
                 case PackBoxStatus::ReadyToPack:
-                    $style->write(' · Pack an application');
+                    $this->write($style, $progress, ' · Pack an application');
                     break;
 
                 case PackBoxStatus::Packing:
-                    $progress->setMessage("Pack an application\n" . (string) $data);
-                    $progress->advance();
+                    $this->write($style, $progress, (string) $data);
                     break;
 
                 case PackBoxStatus::Packed:
-                    $progress->clear();
-                    $style->writeln(\sprintf(
-                        "\33[2K\r <info>●</info> Application packed \"<comment>%s</comment>\"",
+                    $this->write($style, $progress, \sprintf(
+                        '   <info>●</info> Application packed "<comment>%s</comment>"',
                         $config->pharPathname,
                     ));
                     break;

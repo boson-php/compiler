@@ -120,14 +120,8 @@
         },
         "ini": {
             "type": "object",
-            "description": "List of additional compile target php.ini config variables",
-            "additionalProperties": false,
-            "patternProperties": {
-                "^.+$": {
-                    "$ref": "#/$defs/ini-value",
-                    "description": "Additional compile target php.ini config value"
-                }
-            }
+            "description": "List of common additional compile target php.ini config variables",
+            "$ref": "#/$defs/ini-values"
         },
         "box-version": {
             "type": "string",
@@ -139,16 +133,70 @@
         "compilation-target": {
             "type": "object",
             "required": ["type"],
+            "anyOf": [
+                {"$ref": "#/$defs/builtin-compilation-target"},
+                {"$ref": "#/$defs/phar-compilation-target"},
+                {"$ref": "#/$defs/generic-compilation-target"}
+            ],
             "properties": {
                 "output": {
                     "type": "string",
                     "minLength": 1,
                     "description": "The compilation output directory name"
-                },
-                "type": {
+                }
+            }
+        },
+        "generic-compilation-target": {
+            "type": "object",
+            "patternProperties": {
+                "^type$": {
                     "type": "string",
                     "minLength": 1,
                     "description": "The compilation target type"
+                }
+            }
+        },
+        "phar-compilation-target": {
+            "type": "object",
+            "patternProperties": {
+                "^type$": {
+                    "type": "string",
+                    "enum": ["phar"],
+                    "description": "The compilation target type (expected: phar)"
+                }
+            }
+        },
+        "builtin-compilation-target": {
+            "type": "object",
+            "patternProperties": {
+                "^type$": {
+                    "type": "string",
+                    "enum": [
+                        "windows", "win32", "win64", "win",
+                        "linux", "nix",
+                        "macos", "darwin", "mac", "osx"
+                    ],
+                    "description": "The compilation target type (expected: windows|linux|macos)"
+                }
+            },
+            "properties": {
+                "arch": {
+                    "type": "string",
+                    "enum": [
+                        "amd64", "x86_64", "x64",
+                        "aarch64", "arm64", "arm64ilp32"
+                    ],
+                    "description": "The compilation target architecture"
+                },
+                "ini": {
+                    "type": "object",
+                    "description": "List of specific compile target php.ini config variables",
+                    "$ref": "#/$defs/ini-values"
+                },
+                "sfx": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "User defined SFX pathname for this target"
                 }
             }
         },
@@ -170,8 +218,19 @@
                 }
             ]
         },
+        "ini-values": {
+            "type": "object",
+            "description": "List of compile target php.ini config variables",
+            "additionalProperties": false,
+            "patternProperties": {
+                "^.+$": {
+                    "$ref": "#/$defs/ini-value",
+                    "description": "Additional compile target php.ini config value"
+                }
+            }
+        },
         "ini-value": {
-            "oneOf": [
+            "anyOf": [
                 {"$ref": "#/$defs/ini-string-value"},
                 {"$ref": "#/$defs/ini-number-value"},
                 {"$ref": "#/$defs/ini-boolean-value"}

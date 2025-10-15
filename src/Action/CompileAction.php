@@ -16,8 +16,8 @@ final readonly class CompileAction extends TargetAction
      * @var non-empty-string
      */
     private const string DEFAULT_INI_CONFIG = <<<'INI'
-        ffi.enable=1
-        INI;
+                             ffi.enable=1
+                             INI;
 
     public function __construct(
         /**
@@ -28,7 +28,6 @@ final readonly class CompileAction extends TargetAction
          * @var non-empty-string
          */
         private string $targetFilename,
-        private bool $opcache,
         TargetInterface $target,
     ) {
         parent::__construct($target);
@@ -57,7 +56,7 @@ final readonly class CompileAction extends TargetAction
         $this->appendSfxArchive($targetStream);
 
         yield $this->target => CompileStatus::Progress;
-        $this->appendPhpConfig($targetStream, $config);
+        yield $this->appendPhpConfig($targetStream, $config) => CompileStatus::BuildConfiguration;
 
         yield $this->target => CompileStatus::Progress;
         $this->appendSource($targetStream, $config);
@@ -75,14 +74,12 @@ final readonly class CompileAction extends TargetAction
     {
         $ini = self::DEFAULT_INI_CONFIG;
 
-        if ($this->opcache) {
-            $ini .= "\n" . \implode("\n", [
-                'opcache.enable=1',
-                'opcache.enable_cli=1',
-            ]);
-        }
-
-        foreach ($config->ini as $key => $value) {
+        /**
+         * @var non-empty-string $key
+         * @var scalar $value
+         * @phpstan-ignore-next-line : Additional target's ini configuration is valid array (checked by json schema)
+         */
+        foreach ([...$config->ini, ...$this->target->config['ini'] ?? []] as $key => $value) {
             $ini .= "\n$key=" . match ($value) {
                 false => '0',
                 true => '1',
@@ -115,13 +112,15 @@ final readonly class CompileAction extends TargetAction
     /**
      * @param resource $stream
      */
-    private function appendPhpConfig(mixed $stream, Configuration $config): void
+    private function appendPhpConfig(mixed $stream, Configuration $config): string
     {
         $ini = $this->getPhpConfigString($config);
 
         \fwrite($stream, "\xfd\xf6\x69\xe6");
         \fwrite($stream, \pack('N', \strlen($ini)));
         \fwrite($stream, $ini);
+
+        return $ini;
     }
 
     /**

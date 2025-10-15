@@ -25,69 +25,99 @@ final readonly class CompileApplicationWorkflowPresenter extends ConsolePresente
         parent::__construct(new CompileApplicationWorkflow());
     }
 
-    public function process(Configuration $config, SymfonyStyle $style): void
+    private function write(SymfonyStyle $style, ProgressBar $progress, string $message): void
+    {
+        if ($style->isDebug()) {
+            $progress->clear();
+            $style->writeln('   ' . $message);
+
+            return;
+        }
+
+        $progress->setMessage($message);
+        $progress->advance();
+    }
+
+    private function createProgress(SymfonyStyle $style): ProgressBar
     {
         $progress = new ProgressBar($style);
-        $progress->setFormat('[%bar%] %message%');
+        $progress->clear();
+        $progress->setFormat('   [%bar%] %message%');
+        $progress->clear();
+
+        return $progress;
+    }
+
+    public function process(Configuration $config, SymfonyStyle $style): void
+    {
+        $progress = $this->createProgress($style);
 
         /** @var \Stringable|string $data */
         foreach ($this->workflow->process($config) as $data => $status) {
             switch ($status) {
                 case ClearBuildAssemblyDirectoryStatus::ReadyToClean:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Cleanup build directory',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] · Cleanup build directory',
                         $data,
                     ));
                     break;
 
                 case ClearBuildAssemblyDirectoryStatus::Cleaning:
-                    $progress->setMessage(\sprintf(
-                        'Removing \"<comment>%s</comment>\"',
+                    $this->write($style, $progress, \sprintf(
+                        '· remove "<comment>%s</comment>"',
                         $data,
                     ));
                     break;
 
                 case ClearBuildAssemblyDirectoryStatus::Cleaned:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Build directory is cleaned',
+                    $progress->clear();
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] <info>●</info> Build directory is cleaned',
                         $data,
                     ));
                     break;
 
                 case CreateBuildAssemblyDirectoryStatus::ReadyToCreate:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Prepare build directory',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] · Prepare build directory',
                         $data,
                     ));
                     break;
 
                 case CreateBuildAssemblyDirectoryStatus::Created:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Build directory is available',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] <info>●</info> Build directory is available',
                         $data,
                     ));
                     break;
 
                 case CompileStatus::ReadyToCompile:
                 case CompileStatus::Progress:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Building assembly',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] · Building assembly',
                         $data,
                     ));
                     break;
 
+                case CompileStatus::BuildConfiguration:
+                    $this->write($style, $progress, \sprintf(
+                        "php.ini:\n   · %s",
+                        \str_replace("\n", "\n   · ", \rtrim((string) $data)),
+                    ));
+                    break;
+
                 case CompileStatus::Compiled:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Assembly compiled',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] <info>●</info> Assembly compiled',
                         $data,
                     ));
                     break;
 
                 case TargetCompileStatus::ReadyToCompile:
-                    $progress = new ProgressBar($style);
-                    $progress->setFormat('[%bar%] %message%');
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Building',
+                    $progress = $this->createProgress($style);
+
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] · Building',
                         $data,
                     ));
                     break;
@@ -102,35 +132,35 @@ final readonly class CompileApplicationWorkflowPresenter extends ConsolePresente
                     \usleep(100);
 
                     $style->writeln(\sprintf(
-                        '   [<comment>%s</comment>] Target compiled',
+                        '   [<comment>%s</comment>] <info>●</info> Target compiled',
                         $data,
                     ));
                     break;
 
                 case CopyStatus::ReadyToCopy:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Copy dependencies',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] · Copy new dependencies',
                         $data,
                     ));
                     break;
 
                 case CopyStatus::Completed:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Dependencies are copied',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] <info>●</info> Dependencies are copied',
                         $data,
                     ));
                     break;
 
                 case ApplyExecutePermissionsStatus::ReadyToApply:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Apply executable permissions',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] · Apply executable permissions',
                         $data,
                     ));
                     break;
 
                 case ApplyExecutePermissionsStatus::Applied:
-                    $progress->setMessage(\sprintf(
-                        '[<comment>%s</comment>] Executable permissions are applied',
+                    $this->write($style, $progress, \sprintf(
+                        '[<comment>%s</comment>] <info>●</info> Executable permissions are applied',
                         $data,
                     ));
                     break;

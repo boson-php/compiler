@@ -26,9 +26,5 @@ final readonly class CompileApplicationWorkflow implements WorkflowInterface
 
             yield from $target->compile($config);
         }
-
-        // TODO Copy runtime binaries
-        // yield from new CopyRuntimeBinaryAction($assembly)
-        //     ->process($config);
     }
 }

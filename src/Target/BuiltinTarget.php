@@ -14,8 +14,6 @@ use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatform
 
 abstract readonly class BuiltinTarget extends Target
 {
-    protected const bool ENABLE_OPCACHE = false;
-
     /**
      * A list of built-in extensions that are always included with PHP builds.
      *
@@ -122,9 +120,9 @@ abstract readonly class BuiltinTarget extends Target
      */
     protected function getMissingDependencies(Configuration $config, array $actual): array
     {
-        $actual = \array_unique($actual);
+        $missing = \array_values(\array_diff($config->extensions, \array_unique($actual)));
 
-        return \array_values(\array_diff($config->extensions, $actual));
+        return $this->exceptBuiltinExtensions($missing);
     }
 
     /**
@@ -132,12 +130,20 @@ abstract readonly class BuiltinTarget extends Target
      */
     protected function getExpectedDependencies(Configuration $config): array
     {
-        $expected = \array_unique([
+        return $this->exceptBuiltinExtensions(\array_unique([
             ...self::REQUIRED_EXTENSIONS,
             ...$config->extensions,
-        ]);
+        ]));
+    }
 
-        return \array_values(\array_diff($expected, self::BUILTIN_EXTENSIONS));
+    /**
+     * @param array<mixed, non-empty-string> $extensions
+     *
+     * @return list<non-empty-string>
+     */
+    protected function exceptBuiltinExtensions(array $extensions): array
+    {
+        return \array_values(\array_diff($extensions, self::BUILTIN_EXTENSIONS));
     }
 
     protected function process(Configuration $config): iterable
@@ -151,7 +157,6 @@ abstract readonly class BuiltinTarget extends Target
         yield from new CompileAction(
             sfx: $this->getSfxArchivePathname($config),
             targetFilename: $this->getTargetFilename($config),
-            opcache: static::ENABLE_OPCACHE,
             target: $this,
         )
             ->process($config);

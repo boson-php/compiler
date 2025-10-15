@@ -36,7 +36,7 @@ interface TargetInterface extends \Stringable
     }
 
     /**
-     * @return iterable<TargetInterface, \UnitEnum>
+     * @return iterable<string|\Stringable, \UnitEnum>
      */
     public function compile(Configuration $config): iterable;
 }

@@ -1,10 +1,13 @@
 {
     "name": "app",
-    "entrypoint": "index.php",
     "target": [
         {
             "type": "windows",
-            "arch": "amd64"
+            "arch": "amd64",
+            "ini": {
+                "opcache.enable": true,
+                "opcache.enable_cli": true
+            }
         },
         {
             "type": "linux",
@@ -26,10 +29,18 @@
             "type": "phar"
         }
     ],
-    "output": ".\/build",
+    "entrypoint": "index.php",
+    "output": "./build",
+    "extensions": [
+        "ctype",
+        "iconv"
+    ],
+    "mount": [
+        "public"
+    ],
     "build": {
         "directories": [
-            "public"
+            "assets"
         ],
         "finder": [
             {
@@ -38,12 +49,19 @@
             },
             {
                 "directory": "vendor",
-                "not-directory": "vendor\/boson-php\/compiler",
-                "name": "*.php"
+                "not-directory": "vendor/boson-php/compiler",
+                "name": "*.php",
+                "not-name": [
+                    "*Test.php",
+                    "*TestCase.php",
+                    ".phpstorm.meta.php"
+                ]
             }
         ]
     },
     "ini": {
-        "memory_limit": "128M"
+        "memory_limit": "512M",
+        "opcache.enable": false,
+        "opcache.enable_cli": false
     }
 }

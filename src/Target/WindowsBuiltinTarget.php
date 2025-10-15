@@ -11,11 +11,6 @@ use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatform
 final readonly class WindowsBuiltinTarget extends BuiltinTarget
 {
     /**
-     * Windows OS supports opcache
-     */
-    protected const bool ENABLE_OPCACHE = true;
-
-    /**
      * @var non-empty-string
      */
     private const string DEFAULT_RUNTIME_BINARY_NAME = 'libboson-windows-x86_64.dll';

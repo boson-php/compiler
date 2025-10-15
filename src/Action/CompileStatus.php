@@ -8,5 +8,6 @@ enum CompileStatus
 {
     case ReadyToCompile;
     case Progress;
+    case BuildConfiguration;
     case Compiled;
 }

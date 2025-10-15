@@ -20,7 +20,7 @@ enum BuiltinPlatformTarget: string
         return match (\strtolower($name)) {
             'win32', 'win64', 'win' => self::Windows->value,
             'nix' => self::Linux->value,
-            'darwin' => self::MacOS->value,
+            'darwin', 'mac', 'osx' => self::MacOS->value,
             default => $name,
         };
     }
