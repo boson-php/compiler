@@ -17,8 +17,6 @@ final readonly class CompileAction extends TargetAction
      */
     private const string DEFAULT_INI_CONFIG = <<<'INI'
         ffi.enable=1
-        opcache.enable=1
-        opcache.enable_cli=1
         INI;
 
     public function __construct(
@@ -30,6 +28,7 @@ final readonly class CompileAction extends TargetAction
          * @var non-empty-string
          */
         private string $targetFilename,
+        private bool $opcache,
         TargetInterface $target,
     ) {
         parent::__construct($target);
@@ -75,6 +74,13 @@ final readonly class CompileAction extends TargetAction
     private function getPhpConfigString(Configuration $config): string
     {
         $ini = self::DEFAULT_INI_CONFIG;
+
+        if ($this->opcache) {
+            $ini .= "\n" . \implode("\n", [
+                'opcache.enable=1',
+                'opcache.enable_cli=1',
+            ]);
+        }
 
         foreach ($config->ini as $key => $value) {
             $ini .= "\n$key=" . match ($value) {

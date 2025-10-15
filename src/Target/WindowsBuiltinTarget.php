@@ -11,6 +11,11 @@ use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatform
 final readonly class WindowsBuiltinTarget extends BuiltinTarget
 {
     /**
+     * Windows OS supports opcache
+     */
+    protected const bool ENABLE_OPCACHE = true;
+
+    /**
      * @var non-empty-string
      */
     private const string DEFAULT_RUNTIME_BINARY_NAME = 'libboson-windows-x86_64.dll';
@@ -19,56 +24,40 @@ final readonly class WindowsBuiltinTarget extends BuiltinTarget
      * @var list<non-empty-lowercase-string>
      */
     private const array MINIMAL_SFX_EXTENSIONS = [
-        'core',
         'ctype',
-        'date',
         'ffi',
-        'hash',
+        'filter',
         'iconv',
-        'json',
-        'pcre',
-        'random',
-        'reflection',
-        'shmop',
-        'spl',
-        'standard',
-        'zlib',
-        'mbstring',
-        'phar',
         'opcache',
+        'phar',
+        'shmop',
+        'sockets',
+        'zlib',
     ];
 
     /**
      * @var list<non-empty-lowercase-string>
      */
     public const array STANDARD_SFX_EXTENSIONS = [
-        'core',
         'ctype',
         'curl',
-        'date',
-        'ffi',
-        'hash',
-        'iconv',
-        'json',
-        'openssl',
-        'pcre',
-        'random',
-        'reflection',
-        'shmop',
-        'sockets',
-        'standard',
-        'spl',
-        'sqlite3',
-        'sodium',
-        'zlib',
-        'libxml',
         'dom',
+        'ffi',
+        'filter',
+        'iconv',
+        'libxml',
         'mbstring',
+        'opcache',
+        'openssl',
         'pdo',
         'pdo_sqlite',
         'phar',
+        'shmop',
+        'sockets',
+        'sodium',
+        'sqlite3',
         'xml',
-        'opcache',
+        'zlib',
     ];
 
     protected function getTargetFilename(Configuration $config): string
@@ -109,7 +98,7 @@ final readonly class WindowsBuiltinTarget extends BuiltinTarget
             actual: self::STANDARD_SFX_EXTENSIONS,
         ));
 
-        $expected = \implode(', ', $this->getExpectedDependencies($config));
+        $expected = \implode(',', $this->getExpectedDependencies($config));
 
         return new \RuntimeException(\sprintf(
             <<<'MESSAGE'
@@ -117,12 +106,10 @@ final readonly class WindowsBuiltinTarget extends BuiltinTarget
                 1) Fork this repository: https://github.com/boson-php/backend-src
                 2) Open GitHub Actions: https://github.com/USERNAME/backend-src/actions/workflows/build-windows-x86_64.yml
                 3) Press "Run workflow" dropdown
-                3.1) Disable "build cli binary" checkbox
-                3.2) Enable "build phpmicro binary" checkbox
-                3.3) Insert "%s" into "extensions to compile" text input
-                4) Press "Run workflow" dropdown button
-                5) Download compiled SFX assembly
-                6) Add SFX assembly to "sfx" configuration section of this compile target
+                4) Insert "%s" into "extensions to compile" text input
+                5) Press "Run workflow" dropdown button
+                6) Download compiled SFX assembly
+                7) Add SFX assembly to "sfx" configuration section of this compile target
                 MESSAGE,
             $missing,
             $expected,

@@ -14,6 +14,25 @@ use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatform
 
 abstract readonly class BuiltinTarget extends Target
 {
+    protected const bool ENABLE_OPCACHE = false;
+
+    /**
+     * A list of built-in extensions that are always included with PHP builds.
+     *
+     * @var non-empty-list<non-empty-lowercase-string>
+     */
+    private const array BUILTIN_EXTENSIONS = [
+        'core',
+        'date',
+        'hash',
+        'json',
+        'pcre',
+        'random',
+        'reflection',
+        'spl',
+        'standard',
+    ];
+
     /**
      * @var non-empty-list<non-empty-lowercase-string>
      */
@@ -82,7 +101,13 @@ abstract readonly class BuiltinTarget extends Target
         $actual = \array_unique($actual);
 
         foreach ($config->extensions as $expected) {
-            if (!\in_array(\strtolower($expected), $actual, true)) {
+            $lower = \strtolower($expected);
+
+            if (\in_array($lower, self::BUILTIN_EXTENSIONS, true)) {
+                continue;
+            }
+
+            if (!\in_array($lower, $actual, true)) {
                 return false;
             }
         }
@@ -107,10 +132,12 @@ abstract readonly class BuiltinTarget extends Target
      */
     protected function getExpectedDependencies(Configuration $config): array
     {
-        return \array_values(\array_unique([
+        $expected = \array_unique([
             ...self::REQUIRED_EXTENSIONS,
             ...$config->extensions,
-        ]));
+        ]);
+
+        return \array_values(\array_diff($expected, self::BUILTIN_EXTENSIONS));
     }
 
     protected function process(Configuration $config): iterable
@@ -124,6 +151,7 @@ abstract readonly class BuiltinTarget extends Target
         yield from new CompileAction(
             sfx: $this->getSfxArchivePathname($config),
             targetFilename: $this->getTargetFilename($config),
+            opcache: static::ENABLE_OPCACHE,
             target: $this,
         )
             ->process($config);
