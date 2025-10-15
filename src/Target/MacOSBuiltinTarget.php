@@ -8,7 +8,7 @@ use Boson\Component\Compiler\Configuration;
 use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinArchitectureTarget;
 use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatformTarget;
 
-final readonly class MacOsBuiltinTarget extends UnixBuiltinTarget
+final readonly class MacOSBuiltinTarget extends UnixBuiltinTarget
 {
     /**
      * @var non-empty-string
@@ -24,8 +24,9 @@ final readonly class MacOsBuiltinTarget extends UnixBuiltinTarget
     {
         return match ($this->arch) {
             BuiltinArchitectureTarget::Amd64 => __DIR__ . '/../../bin/minimal/macos-x86_64.sfx',
+            /** @phpstan-ignore-next-line : Allow invalid architecture arm */
             BuiltinArchitectureTarget::Arm64 => __DIR__ . '/../../bin/minimal/macos-aarch64.sfx',
-            default => $this->unsupportedArchitectureOfPlatform(
+            default => throw $this->unsupportedArchitectureOfPlatform(
                 platform: BuiltinPlatformTarget::MacOS,
                 arch: $this->arch,
             ),

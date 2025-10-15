@@ -29,7 +29,7 @@ final readonly class WindowsBuiltinTarget extends BuiltinTarget
     {
         return match ($this->arch) {
             BuiltinArchitectureTarget::Amd64 => __DIR__ . '/../../bin/minimal/windows-x86_64.sfx',
-            default => $this->unsupportedArchitectureOfPlatform(
+            default => throw $this->unsupportedArchitectureOfPlatform(
                 platform: BuiltinPlatformTarget::Windows,
                 arch: $this->arch,
             ),

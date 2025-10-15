@@ -11,7 +11,7 @@ interface TargetInterface extends \Stringable
     /**
      * Gets target type
      *
-     * @var non-empty-lowercase-string
+     * @var non-empty-string
      */
     public string $type {
         get;

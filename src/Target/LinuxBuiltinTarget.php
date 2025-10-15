@@ -24,8 +24,9 @@ final readonly class LinuxBuiltinTarget extends UnixBuiltinTarget
     {
         return match ($this->arch) {
             BuiltinArchitectureTarget::Amd64 => self::DEFAULT_RUNTIME_AMD64_BINARY_NAME,
+            /** @phpstan-ignore-next-line : Allow invalid architecture arm */
             BuiltinArchitectureTarget::Arm64 => self::DEFAULT_RUNTIME_ARM64_BINARY_NAME,
-            default => $this->unsupportedArchitectureOfPlatform(
+            default => throw $this->unsupportedArchitectureOfPlatform(
                 platform: BuiltinPlatformTarget::Linux,
                 arch: $this->arch,
             )
@@ -36,8 +37,9 @@ final readonly class LinuxBuiltinTarget extends UnixBuiltinTarget
     {
         return match ($this->arch) {
             BuiltinArchitectureTarget::Amd64 => __DIR__ . '/../../bin/minimal/linux-x86_64.sfx',
+            /** @phpstan-ignore-next-line : Allow invalid architecture arm */
             BuiltinArchitectureTarget::Arm64 => __DIR__ . '/../../bin/minimal/linux-aarch64.sfx',
-            default => $this->unsupportedArchitectureOfPlatform(
+            default => throw $this->unsupportedArchitectureOfPlatform(
                 platform: BuiltinPlatformTarget::Linux,
                 arch: $this->arch,
             ),

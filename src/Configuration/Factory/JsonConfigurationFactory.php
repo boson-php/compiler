@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Configuration\Factory;
 
-use Boson\Component\Compiler\Assembly\TargetFactoryInterface;
 use Boson\Component\Compiler\Configuration;
 use Boson\Component\Compiler\Configuration\DirectoryIncludeConfiguration;
 use Boson\Component\Compiler\Configuration\Factory\JsonConfiguration\JsonConfigLoader;
@@ -13,8 +12,11 @@ use Boson\Component\Compiler\Configuration\Factory\JsonConfiguration\JsonConfigV
 use Boson\Component\Compiler\Configuration\FileIncludeConfiguration;
 use Boson\Component\Compiler\Configuration\FinderIncludeConfiguration;
 use Boson\Component\Compiler\Configuration\IncludeConfiguration;
+use Boson\Component\Compiler\Target\TargetFactoryInterface;
 
 /**
+ * @phpstan-import-type CompilationTargetConfigType from TargetFactoryInterface
+ *
  * @phpstan-type OneOrManyReferencesType non-empty-string|non-empty-list<non-empty-string>
  * @phpstan-type RawFinderInclusionType array{
  *     directory: OneOrManyReferencesType,
@@ -22,9 +24,6 @@ use Boson\Component\Compiler\Configuration\IncludeConfiguration;
  *     name?: OneOrManyReferencesType,
  *     not-name?: OneOrManyReferencesType
  * }
- *
- * @phpstan-import-type CompilationTargetConfigType from TargetFactoryInterface
- *
  * @phpstan-type RawFileInclusionType non-empty-string
  * @phpstan-type RawDirectoryInclusionType non-empty-string
  * @phpstan-type RawBuildConfigurationType array{
@@ -122,10 +121,6 @@ final readonly class JsonConfigurationFactory implements ConfigurationFactoryInt
         $time = @\filemtime($pathname);
 
         if ($time === false) {
-            return $config;
-        }
-
-        if ($time === null) {
             return $config;
         }
 
@@ -313,8 +308,6 @@ final readonly class JsonConfigurationFactory implements ConfigurationFactoryInt
 
         /**
          * @phpstan-var non-empty-string|list<non-empty-string> $notDirectories
-         *
-         * @phpstan-ignore-next-line : False-positive; null-coalescence using
          */
         $notDirectories = $inclusion['not-directory'] ?? [];
 
@@ -322,8 +315,6 @@ final readonly class JsonConfigurationFactory implements ConfigurationFactoryInt
 
         /**
          * @phpstan-var non-empty-string|list<non-empty-string> $notNames
-         *
-         * @phpstan-ignore-next-line : False-positive; null-coalescence using
          */
         $notNames = $inclusion['not-name'] ?? [];
 

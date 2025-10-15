@@ -9,7 +9,7 @@ use Boson\Component\Compiler\Target\BuiltinTarget;
 use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinArchitectureTarget;
 use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatformTarget;
 use Boson\Component\Compiler\Target\LinuxBuiltinTarget;
-use Boson\Component\Compiler\Target\MacOsBuiltinTarget;
+use Boson\Component\Compiler\Target\MacOSBuiltinTarget;
 use Boson\Component\Compiler\Target\TargetFactoryInterface;
 use Boson\Component\Compiler\Target\WindowsBuiltinTarget;
 
@@ -64,7 +64,7 @@ readonly class BuiltinTargetFactory implements TargetFactoryInterface
                 output: $input['output'] ?? null,
                 config: $input,
             ),
-            BuiltinPlatformTarget::MacOS => new MacOsBuiltinTarget(
+            BuiltinPlatformTarget::MacOS => new MacOSBuiltinTarget(
                 arch: $arch,
                 type: $platform->value,
                 output: $input['output'] ?? null,
@@ -82,7 +82,7 @@ readonly class BuiltinTargetFactory implements TargetFactoryInterface
             return $this->getDefaultArchitecture();
         }
 
-        if (!\is_string($input['arch'])) {
+        if (!\is_string($input['arch']) || $input['arch'] === '') {
             throw $this->invalidArchitectureError($platform, $input['arch']);
         }
 
@@ -99,6 +99,8 @@ readonly class BuiltinTargetFactory implements TargetFactoryInterface
     }
 
     /**
+     * @param non-empty-string $arch
+     *
      * @throws \Throwable
      */
     private function getArchitectureFromString(BuiltinPlatformTarget $platform, string $arch): BuiltinArchitectureTarget

@@ -34,13 +34,13 @@ final readonly class CopyAllRuntimeBinariesAction extends CopyRuntimeAction
     {
         $binaries = new \DirectoryIterator($this->getSourceRuntimeBinDirectory());
 
-        /** @var \SplFileInfo $binary */
+        /** @var \DirectoryIterator $binary */
         foreach ($binaries as $binary) {
             if ($binary->isDot() || $binary->isDir()) {
                 continue;
             }
 
-            /** @var non-empty-string */
+            /** @phpstan-ignore-next-line : Pathname always non-empty string */
             yield $binary->getPathname();
         }
     }

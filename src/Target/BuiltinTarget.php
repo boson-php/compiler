@@ -75,6 +75,9 @@ abstract readonly class BuiltinTarget extends Target
      */
     abstract protected function getTargetFilename(Configuration $config): string;
 
+    /**
+     * @return non-empty-string
+     */
     abstract protected function getSfxArchivePathname(Configuration $config): string;
 
     public function __toString(): string

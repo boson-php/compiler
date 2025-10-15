@@ -52,9 +52,15 @@ final readonly class JsonConfigLoader
             return null;
         }
 
+        $json = $this->readConfigAsJsonStringFromReadable($pathname);
+
+        if ($json === null) {
+            return null;
+        }
+
         return new LoadedJsonConfigInfo(
             pathname: $pathname,
-            json: $this->readConfigAsJsonStringFromReadable($pathname),
+            json: $json,
         );
     }
 

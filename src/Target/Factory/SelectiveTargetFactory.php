@@ -16,7 +16,7 @@ readonly class SelectiveTargetFactory implements TargetFactoryInterface
     private array $factories;
 
     /**
-     * @param iterable<mixed, TargetFactoryInterface>|null $factories
+     * @param iterable<mixed, TargetFactoryInterface> $factories
      */
     public function __construct(iterable $factories)
     {

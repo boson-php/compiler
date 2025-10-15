@@ -15,25 +15,26 @@ readonly class UserDefinedTargetFactory implements TargetFactoryInterface
 {
     public function create(array $input, Configuration $config): ?TargetInterface
     {
-        if (!$this->isSupportedType($input['type'])) {
+        $factory = $input['type'];
+
+        if (!$this->isSupportedType($factory)) {
             return null;
         }
 
-        $instance = $this->createUserFactory($input['type'], $config);
+        $instance = $this->createUserFactory($factory, $input, $config);
 
         return $instance->create($input, $config);
     }
 
     /**
+     * @param class-string<TargetFactoryInterface> $factory
      * @param CompilationTargetConfigType $input
      */
-    protected function createUserFactory(array $input, Configuration $config): TargetFactoryInterface
+    protected function createUserFactory(string $factory, array $input, Configuration $config): TargetFactoryInterface
     {
-        $factory = $input['type'];
-
         try {
             return new $factory();
-        } catch (\Throwable $e) {
+        } catch (\Throwable $e) { // @phpstan-ignore-line : This is not dead catch
             throw new \RuntimeException(\sprintf(
                 'Unable to create %s compilation target factory: %s',
                 $factory,

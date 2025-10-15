@@ -38,13 +38,16 @@ final readonly class JsonConfigValidator
     /**
      * @phpstan-assert RawConfigurationType $data
      *
+     * @param array<array-key, mixed> $data
      * @param non-empty-string $pathname
      */
     public function validateOrFail(array $data, string $pathname): void
     {
         $validator = $this->validate($data);
 
-        $message = $this->getFormattedErrorMessage($validator->getErrors());
+        /** @var JsonSchemaErrorType $errors */
+        $errors = $validator->getErrors();
+        $message = $this->getFormattedErrorMessage($errors);
 
         if ($message === null) {
             return;
@@ -57,6 +60,9 @@ final readonly class JsonConfigValidator
         ));
     }
 
+    /**
+     * @param array<array-key, mixed> $data
+     */
     private function validate(array $data): Validator
     {
         $validator = new Validator();
@@ -107,7 +113,6 @@ final readonly class JsonConfigValidator
                 continue;
             }
 
-            // @phpstan-ignore-next-line : PHPStan generator false-positive
             yield $path => $messages;
 
             $processedPaths[] = $path;

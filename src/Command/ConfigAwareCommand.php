@@ -90,6 +90,8 @@ abstract class ConfigAwareCommand extends Command
 
     /**
      * Returns configuration pathname using input "--config" option resolving
+     *
+     * @return non-empty-string
      */
     private function getConfigurationPathname(InputInterface $input): string
     {

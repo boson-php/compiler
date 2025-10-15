@@ -18,14 +18,15 @@ use Boson\Component\Compiler\Target\TargetInterface;
 final readonly class JsonConfigTargetFactory extends SelectiveTargetFactory
 {
     /**
-     * @param iterable<mixed, TargetFactoryInterface>|null $factories
+     * @param iterable<mixed, TargetFactoryInterface> $factories
      */
-    public function __construct(iterable $factories = [
-        new BuiltinTargetFactory(),
-        new PharTargetFactory(),
-        new UserDefinedTargetFactory(),
-    ])
-    {
+    public function __construct(
+        iterable $factories = [
+            new BuiltinTargetFactory(),
+            new PharTargetFactory(),
+            new UserDefinedTargetFactory(),
+        ],
+    ) {
         parent::__construct($factories);
     }
 

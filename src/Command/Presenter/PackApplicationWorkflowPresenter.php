@@ -28,8 +28,7 @@ final readonly class PackApplicationWorkflowPresenter extends ConsolePresenter
         $progress = new ProgressBar($style);
         $progress->setFormat('[%bar%] %message%');
 
-        $buffer = [];
-
+        /** @var string|\Stringable $data */
         foreach ($this->workflow->process($config) as $data => $process) {
             switch ($process) {
                 case CreateBuildDirectoryStatus::ReadyToCreate:
