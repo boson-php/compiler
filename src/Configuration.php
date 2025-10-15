@@ -52,21 +52,28 @@ final class Configuration
      *
      * @var list<IncludeConfiguration>
      */
-    public private(set) array $build;
+    public private(set) array $build = [];
 
     /**
      * PHP INI settings to be applied during compilation.
      *
      * @var array<non-empty-string, scalar>
      */
-    public private(set) array $ini;
+    public private(set) array $ini = [];
 
     /**
      * List of mount directories.
      *
      * @var list<non-empty-string>
      */
-    public private(set) array $mount;
+    public private(set) array $mount = [];
+
+    /**
+     * List of required compile target PHP extensions.
+     *
+     * @var list<non-empty-string>
+     */
+    public private(set) array $extensions = [];
 
     /**
      * List of compilation targets.
@@ -195,9 +202,6 @@ final class Configuration
     }
 
     /**
-     * @param iterable<mixed, IncludeConfiguration> $build
-     * @param iterable<non-empty-string, scalar> $ini
-     * @param iterable<mixed, non-empty-string> $mount
      * @param non-empty-string|null $output
      * @param non-empty-string|null $root
      */
@@ -216,14 +220,8 @@ final class Configuration
         public private(set) string $boxVersion = self::DEFAULT_BOX_VERSION,
         ?string $output = self::DEFAULT_BUILD_DIRECTORY,
         ?string $root = self::DEFAULT_APP_DIRECTORY,
-        iterable $build = [],
-        iterable $ini = [],
-        iterable $mount = [],
         public private(set) int $timestamp = \PHP_INT_MAX,
     ) {
-        $this->build = \iterator_to_array($build, false);
-        $this->ini = \iterator_to_array($ini, true);
-        $this->mount = \iterator_to_array($mount, false);
         $this->output = $output;
         $this->root = $root;
     }
@@ -345,6 +343,20 @@ final class Configuration
     {
         $self = clone $this;
         $self->targets[] = $target;
+
+        return $self;
+    }
+
+    /**
+     * Returns copy of an instance with an additional required compilation
+     * target PHP extension.
+     *
+     * @param non-empty-string $extension
+     */
+    public function withAddedExtension(string $extension): self
+    {
+        $self = clone $this;
+        $self->extensions[] = $extension;
 
         return $self;
     }

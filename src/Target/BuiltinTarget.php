@@ -15,6 +15,14 @@ use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatform
 abstract readonly class BuiltinTarget extends Target
 {
     /**
+     * @var non-empty-list<non-empty-lowercase-string>
+     */
+    private const array REQUIRED_EXTENSIONS = [
+        'ffi',
+        'phar',
+    ];
+
+    /**
      * @param non-empty-string $type
      * @param non-empty-string|null $output
      * @param array<array-key, mixed> $config
@@ -30,6 +38,79 @@ abstract readonly class BuiltinTarget extends Target
             output: $output ?? $type . \DIRECTORY_SEPARATOR . $arch->value,
             config: $config,
         );
+    }
+
+    /**
+     * @return non-empty-string|null
+     */
+    protected function findCustomSfxPathname(Configuration $config): ?string
+    {
+        $sfx = $this->config['sfx'] ?? null;
+
+        if (!isset($sfx)) {
+            return null;
+        }
+
+        if (!\is_string($sfx) || $sfx === '') {
+            throw new \InvalidArgumentException(\sprintf(
+                'Custom SFX of %s compilation target must be a non empty string, %s given',
+                $this->type,
+                \get_debug_type($sfx),
+            ));
+        }
+
+        if (\is_readable($sfx)) {
+            return $sfx;
+        }
+
+        if (\is_readable($resolved = $config->root . \DIRECTORY_SEPARATOR . $sfx)) {
+            return $resolved;
+        }
+
+        throw new \InvalidArgumentException(\sprintf(
+            'Custom SFX "%s" of %s compilation target must be a valid pathname to the file',
+            $sfx,
+            $this->type,
+        ));
+    }
+
+    /**
+     * @param list<non-empty-string> $actual
+     */
+    protected function isExtensionMatches(Configuration $config, array $actual): bool
+    {
+        $actual = \array_unique($actual);
+
+        foreach ($config->extensions as $expected) {
+            if (!\in_array(\strtolower($expected), $actual, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param list<non-empty-string> $actual
+     *
+     * @return list<non-empty-string>
+     */
+    protected function getMissingDependencies(Configuration $config, array $actual): array
+    {
+        $actual = \array_unique($actual);
+
+        return \array_values(\array_diff($config->extensions, $actual));
+    }
+
+    /**
+     * @return list<non-empty-string>
+     */
+    protected function getExpectedDependencies(Configuration $config): array
+    {
+        return \array_values(\array_unique([
+            ...self::REQUIRED_EXTENSIONS,
+            ...$config->extensions,
+        ]));
     }
 
     protected function process(Configuration $config): iterable

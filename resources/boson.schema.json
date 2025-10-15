@@ -109,14 +109,23 @@
                 }
             }
         },
+        "extensions": {
+            "type": "array",
+            "description": "List of required compile target PHP extensions",
+            "items": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Name of required compile target PHP extension"
+            }
+        },
         "ini": {
             "type": "object",
-            "description": "List of additional php.ini variables",
+            "description": "List of additional compile target php.ini config variables",
             "additionalProperties": false,
             "patternProperties": {
                 "^.+$": {
                     "$ref": "#/$defs/ini-value",
-                    "description": "Additional php.ini key"
+                    "description": "Additional compile target php.ini config value"
                 }
             }
         },
@@ -170,15 +179,15 @@
         },
         "ini-string-value": {
             "type": "string",
-            "description": "Additional php.ini string value"
+            "description": "Additional compile target php.ini string value"
         },
         "ini-number-value": {
             "type": "number",
-            "description": "Additional php.ini number (int or float) value"
+            "description": "Additional compile target php.ini number (int or float) value"
         },
         "ini-boolean-value": {
             "type": "boolean",
-            "description": "Additional php.ini boolean value"
+            "description": "Additional compile target php.ini boolean value"
         }
     }
 }

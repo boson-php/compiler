@@ -38,6 +38,7 @@ use Boson\Component\Compiler\Target\TargetFactoryInterface;
  *     output?: non-empty-string,
  *     root?: non-empty-string,
  *     mount?: list<non-empty-string>,
+ *     extensions?: list<non-empty-string>,
  *     build?: RawBuildConfigurationType,
  *     ini?: array<non-empty-string, string|int|float|bool>,
  *     box-version?: non-empty-string,
@@ -94,6 +95,7 @@ final readonly class JsonConfigurationFactory implements ConfigurationFactoryInt
         $config = $this->extendBuildConfiguration($input, $config);
         $config = $this->extendIni($input, $config);
         $config = $this->extendMount($input, $config);
+        $config = $this->extendExtension($input, $config);
         $config = $this->extendCompilationTargets($input, $config);
 
         return $config;
@@ -278,6 +280,22 @@ final readonly class JsonConfigurationFactory implements ConfigurationFactoryInt
 
         foreach ((array) $input['ini'] as $iniConfig => $iniValue) {
             $config = $config->withAddedIni($iniConfig, $iniValue);
+        }
+
+        return $config;
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendExtension(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['extensions'])) {
+            return $config;
+        }
+
+        foreach ((array) $input['extensions'] as $extension) {
+            $config = $config->withAddedExtension($extension);
         }
 
         return $config;
