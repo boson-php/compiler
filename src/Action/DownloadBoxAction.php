@@ -28,6 +28,10 @@ final readonly class DownloadBoxAction implements ActionInterface
             return yield DownloadBoxStatus::Complete;
         }
 
+        if (!\is_dir($directory = \dirname($config->boxPharPathname))) {
+            @\mkdir($directory, recursive: true);
+        }
+
         $localBoxStream = @\fopen($config->boxPharPathname, 'w+b');
 
         if ($localBoxStream === false) {

@@ -1,0 +1,24 @@
+{
+    "name": "app",
+    "entrypoint": "index.php",
+    "output": ".\/build",
+    "build": {
+        "directories": [
+            "public"
+        ],
+        "finder": [
+            {
+                "directory": "src",
+                "name": "*.php"
+            },
+            {
+                "directory": "vendor",
+                "not-directory": "vendor\/boson-php\/compiler",
+                "name": "*.php"
+            }
+        ]
+    },
+    "ini": {
+        "memory_limit": "128M"
+    }
+}

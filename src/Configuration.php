@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler;
 
-use Boson\Component\Compiler\Assembly\AssemblyArchitecture;
-use Boson\Component\Compiler\Assembly\AssemblyPlatform;
 use Boson\Component\Compiler\Configuration\IncludeConfiguration;
+use Boson\Component\Compiler\Target\TargetInterface;
 
 /**
  * Configuration class for managing compiler settings and build parameters.
@@ -49,20 +48,6 @@ final class Configuration
     public const ?string DEFAULT_APP_DIRECTORY = null;
 
     /**
-     * List of target CPU architectures for compilation.
-     *
-     * @var list<AssemblyArchitecture>
-     */
-    public private(set) array $architectures;
-
-    /**
-     * List of target operating system platforms for compilation.
-     *
-     * @var list<AssemblyPlatform>
-     */
-    public private(set) array $platforms;
-
-    /**
      * List of build inclusion configurations.
      *
      * @var list<IncludeConfiguration>
@@ -84,6 +69,13 @@ final class Configuration
     public private(set) array $mount;
 
     /**
+     * List of compilation targets.
+     *
+     * @var list<TargetInterface>
+     */
+    public private(set) array $targets = [];
+
+    /**
      * Output directory for compiled files.
      *
      * If not specified, defaults to 'build' subdirectory in root.
@@ -91,9 +83,18 @@ final class Configuration
      * @var non-empty-string
      */
     public private(set) string $output {
-        get => $this->output;
+        get => \str_replace(['\\', '/'], \DIRECTORY_SEPARATOR, $this->output);
         set(?string $directory) => $directory
             ?? ($this->root . \DIRECTORY_SEPARATOR . 'build');
+    }
+
+    /**
+     * Gets output temp directory
+     *
+     * @var non-empty-string
+     */
+    public string $temp {
+        get => $this->output . \DIRECTORY_SEPARATOR . '.temp';
     }
 
     /**
@@ -125,7 +126,7 @@ final class Configuration
      * @var non-empty-string
      */
     public string $pharPathname {
-        get => $this->output . \DIRECTORY_SEPARATOR . $this->pharName;
+        get => $this->temp . \DIRECTORY_SEPARATOR . $this->pharName;
     }
 
     /**
@@ -143,7 +144,7 @@ final class Configuration
      * @var non-empty-string
      */
     public string $boxStubPathname {
-        get => $this->output . \DIRECTORY_SEPARATOR . $this->boxStubName;
+        get => $this->temp . \DIRECTORY_SEPARATOR . $this->boxStubName;
     }
 
     /**
@@ -161,7 +162,7 @@ final class Configuration
      * @var non-empty-string
      */
     public string $boxConfigPathname {
-        get => $this->output . \DIRECTORY_SEPARATOR . $this->boxConfigName;
+        get => $this->temp . \DIRECTORY_SEPARATOR . $this->boxConfigName;
     }
 
     /**
@@ -179,7 +180,7 @@ final class Configuration
      * @var non-empty-string
      */
     public string $boxPharPathname {
-        get => $this->output . \DIRECTORY_SEPARATOR . $this->boxPharName;
+        get => $this->temp . \DIRECTORY_SEPARATOR . $this->boxPharName;
     }
 
     /**
@@ -196,8 +197,6 @@ final class Configuration
     /**
      * @param iterable<mixed, IncludeConfiguration> $build
      * @param iterable<non-empty-string, scalar> $ini
-     * @param iterable<mixed, AssemblyArchitecture> $architectures
-     * @param iterable<mixed, AssemblyPlatform> $platforms
      * @param iterable<mixed, non-empty-string> $mount
      * @param non-empty-string|null $output
      * @param non-empty-string|null $root
@@ -217,8 +216,6 @@ final class Configuration
         public private(set) string $boxVersion = self::DEFAULT_BOX_VERSION,
         ?string $output = self::DEFAULT_BUILD_DIRECTORY,
         ?string $root = self::DEFAULT_APP_DIRECTORY,
-        iterable $architectures = [],
-        iterable $platforms = [],
         iterable $build = [],
         iterable $ini = [],
         iterable $mount = [],
@@ -226,8 +223,6 @@ final class Configuration
     ) {
         $this->build = \iterator_to_array($build, false);
         $this->ini = \iterator_to_array($ini, true);
-        $this->architectures = \iterator_to_array($architectures, false);
-        $this->platforms = \iterator_to_array($platforms, false);
         $this->mount = \iterator_to_array($mount, false);
         $this->output = $output;
         $this->root = $root;
@@ -344,47 +339,12 @@ final class Configuration
     }
 
     /**
-     * Returns copy of an instance with updated architecture targets.
-     *
-     * @param iterable<mixed, AssemblyArchitecture|non-empty-string> $architectures
+     * Returns copy of an instance with an additional compilation target.
      */
-    public function withArchitectures(iterable $architectures): self
+    public function withAddedTarget(TargetInterface $target): self
     {
         $self = clone $this;
-        $self->architectures = [];
-
-        foreach ($architectures as $architecture) {
-            if (\is_string($architecture)) {
-                $architecture = AssemblyArchitecture::tryFromNormalized($architecture);
-            }
-
-            if ($architecture !== null) {
-                $self->architectures[] = $architecture;
-            }
-        }
-
-        return $self;
-    }
-
-    /**
-     * Returns copy of an instance with updated platform targets.
-     *
-     * @param iterable<mixed, AssemblyPlatform|non-empty-string> $platforms
-     */
-    public function withPlatforms(iterable $platforms): self
-    {
-        $self = clone $this;
-        $self->platforms = [];
-
-        foreach ($platforms as $platform) {
-            if (\is_string($platform)) {
-                $platform = AssemblyPlatform::tryFromNormalized($platform);
-            }
-
-            if ($platform !== null) {
-                $self->platforms[] = $platform;
-            }
-        }
+        $self->targets[] = $target;
 
         return $self;
     }

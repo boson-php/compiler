@@ -4,293 +4,301 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Configuration\Factory;
 
+use Boson\Component\Compiler\Assembly\TargetFactoryInterface;
 use Boson\Component\Compiler\Configuration;
 use Boson\Component\Compiler\Configuration\DirectoryIncludeConfiguration;
+use Boson\Component\Compiler\Configuration\Factory\JsonConfiguration\JsonConfigLoader;
+use Boson\Component\Compiler\Configuration\Factory\JsonConfiguration\JsonConfigTargetFactory;
+use Boson\Component\Compiler\Configuration\Factory\JsonConfiguration\JsonConfigValidator;
 use Boson\Component\Compiler\Configuration\FileIncludeConfiguration;
 use Boson\Component\Compiler\Configuration\FinderIncludeConfiguration;
 use Boson\Component\Compiler\Configuration\IncludeConfiguration;
-use JsonSchema\Validator;
 
 /**
- * @phpstan-type RawFinderInclusionType object{
- *     directory: non-empty-string|non-empty-list<non-empty-string>,
- *     not-directory?: non-empty-string|list<non-empty-string>,
- *     name?: non-empty-string|list<non-empty-string>,
- *     not-name?: non-empty-string|list<non-empty-string>
+ * @phpstan-type OneOrManyReferencesType non-empty-string|non-empty-list<non-empty-string>
+ * @phpstan-type RawFinderInclusionType array{
+ *     directory: OneOrManyReferencesType,
+ *     not-directory?: OneOrManyReferencesType,
+ *     name?: OneOrManyReferencesType,
+ *     not-name?: OneOrManyReferencesType
  * }
+ *
+ * @phpstan-import-type CompilationTargetConfigType from TargetFactoryInterface
+ *
  * @phpstan-type RawFileInclusionType non-empty-string
  * @phpstan-type RawDirectoryInclusionType non-empty-string
- * @phpstan-type RawConfigurationType object{
+ * @phpstan-type RawBuildConfigurationType array{
+ *     files: list<RawFileInclusionType>,
+ *     directories: list<RawDirectoryInclusionType>,
+ *     finder: list<RawFinderInclusionType>
+ * }
+ * @phpstan-type RawConfigurationType array{
  *     name?: non-empty-string,
+ *     target: non-empty-list<CompilationTargetConfigType>,
  *     entrypoint?: non-empty-string,
  *     output?: non-empty-string,
  *     root?: non-empty-string,
- *     box-version?: non-empty-string,
- *     arch?: list<non-empty-string>,
- *     platform?: list<non-empty-string>,
  *     mount?: list<non-empty-string>,
- *     build?: object{
- *         files: list<RawFileInclusionType>,
- *         directories: list<RawDirectoryInclusionType>,
- *         finder: list<RawFinderInclusionType>
- *     },
- *     ini?: object
+ *     build?: RawBuildConfigurationType,
+ *     ini?: array<non-empty-string, string|int|float|bool>,
+ *     box-version?: non-empty-string,
  * }
  */
-final class JsonConfigurationFactory implements ConfigurationFactoryInterface
+final readonly class JsonConfigurationFactory implements ConfigurationFactoryInterface
 {
     /**
      * @var non-empty-string
      */
-    public const string DEFAULT_JSON_FILENAME = 'boson.json';
+    public const string DEFAULT_JSON_FILENAME = JsonConfigLoader::DEFAULT_JSON_FILENAME;
+
+    private JsonConfigTargetFactory $targets;
 
     /**
-     * @var non-empty-string
+     * JSON configuration loader
      */
-    private const string JSON_SCHEMA_FILENAME = __DIR__ . '/../../../resources/boson.schema.json';
+    private JsonConfigLoader $loader;
 
     /**
-     * @param non-empty-string $filename
+     * JSON configuration validator
      */
+    private JsonConfigValidator $validator;
+
     public function __construct(
-        private readonly string $filename = self::DEFAULT_JSON_FILENAME,
-    ) {}
-
-    /**
-     * @return non-empty-string
-     */
-    private function readSchemaAsJsonString(): string
-    {
-        $result = @\file_get_contents(self::JSON_SCHEMA_FILENAME);
-
-        if ($result === false || $result === '') {
-            throw new \RuntimeException('Failed to load configuration schema file');
-        }
-
-        return $result;
-    }
-
-    /**
-     * @throws \JsonException
-     */
-    private function readSchemaAsObject(): object
-    {
-        $json = $this->readSchemaAsJsonString();
-
-        return (object) \json_decode($json, false, 64, \JSON_THROW_ON_ERROR);
-    }
-
-    private function validate(mixed $config): Validator
-    {
-        $validator = new Validator();
-
-        try {
-            $schema = $this->readSchemaAsObject();
-        } catch (\Throwable) {
-            throw new \RuntimeException('An error occurred while parsing configuration schema file');
-        }
-
-        $validator->validate($config, $schema);
-
-        return $validator;
-    }
-
-    private function readConfigAsJsonStringFromReadable(string $pathname): ?string
-    {
-        $contents = @\file_get_contents($pathname);
-
-        if ($contents === false) {
-            return null;
-        }
-
-        return $contents;
-    }
-
-    private function readConfigAsJsonString(Configuration $config): ?string
-    {
-        $pathname = $this->getConfigPathname($config);
-
-        if ($pathname === null) {
-            return null;
-        }
-
-        return $this->readConfigAsJsonStringFromReadable($pathname);
-    }
-
-    private function getConfigPathname(Configuration $config): ?string
-    {
-        if (\is_readable($pathname = $config->root . '/' . $this->filename)) {
-            return $pathname;
-        }
-
-        if (\is_readable($pathname = $this->filename)) {
-            return $pathname;
-        }
-
-        return null;
-    }
-
-    private function getConfigTimestamp(Configuration $config): ?int
-    {
-        $pathname = $this->getConfigPathname($config);
-
-        if ($pathname === null) {
-            return null;
-        }
-
-        $time = \filemtime($pathname);
-
-        if ($time === false) {
-            return null;
-        }
-
-        return $time;
-    }
-
-    /**
-     * @throws \JsonException
-     */
-    private function readConfigAsObject(Configuration $config): ?object
-    {
-        $json = $this->readConfigAsJsonString($config);
-
-        if ($json === null) {
-            return null;
-        }
-
-        return (object) \json_decode($json, false, 64, \JSON_THROW_ON_ERROR);
-    }
-
-    private function validateConfigOrFail(object $data): void
-    {
-        $validator = $this->validate($data);
-
-        /** @var array{property: non-empty-string, message: non-empty-string, ...} $error */
-        foreach ($validator->getErrors() as $error) {
-            throw new \RuntimeException(\vsprintf("%s in $.%s\nin config %s", [
-                $error['message'],
-                $error['property'],
-                /** @phpstan-ignore ternary.shortNotAllowed */
-                \realpath($this->filename) ?: $this->filename,
-            ]));
-        }
-    }
-
-    /**
-     * @return RawConfigurationType|null
-     */
-    private function loadConfigOrFail(Configuration $config): ?object
-    {
-        try {
-            return $this->readConfigAsObject($config);
-        } catch (\Throwable $e) {
-            throw new \RuntimeException(\sprintf(
-                '%s: An error occurred while parsing "%s" configuration file',
-                $e->getMessage(),
-                /** @phpstan-ignore ternary.shortNotAllowed */
-                \realpath($this->filename) ?: $this->filename,
-            ));
-        }
+        /**
+         * @var non-empty-string
+         */
+        private string $filename = JsonConfigLoader::DEFAULT_JSON_FILENAME,
+    ) {
+        $this->targets = new JsonConfigTargetFactory();
+        $this->validator = new JsonConfigValidator();
+        $this->loader = new JsonConfigLoader();
     }
 
     public function createConfiguration(Configuration $config): Configuration
     {
-        $data = $this->loadConfigOrFail($config);
+        $loaded = $this->loader->loadConfigOrFail($this->filename, $config);
 
-        if ($data === null) {
+        if ($loaded === null) {
             return $config;
         }
 
-        $this->validateConfigOrFail($data);
+        [$pathname, $input] = [$loaded->pathname, $loaded->data];
 
-        if (($time = $this->getConfigTimestamp($config)) !== null) {
-            $config = $config->withTimestamp($time);
+        $this->validator->validateOrFail($input, $pathname);
+
+        $config = $this->extendTimestamp($config, $pathname);
+        $config = $this->extendName($input, $config);
+        $config = $this->extendEntrypoint($input, $config);
+        $config = $this->extendBoxVersion($input, $config);
+        $config = $this->extendOutputDirectory($input, $config);
+        $config = $this->extendRootDirectory($input, $config);
+        $config = $this->extendBuildConfiguration($input, $config);
+        $config = $this->extendIni($input, $config);
+        $config = $this->extendMount($input, $config);
+        $config = $this->extendCompilationTargets($input, $config);
+
+        return $config;
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendCompilationTargets(array $input, Configuration $config): Configuration
+    {
+        foreach ($input['target'] as $inputTarget) {
+            $config = $config->withAddedTarget(
+                target: $this->targets->create($inputTarget, $config),
+            );
         }
 
-        if (\property_exists($data, 'name')) {
-            $config = $config->withName($data->name);
+        return $config;
+    }
+
+    /**
+     * @param non-empty-string $pathname
+     */
+    private function extendTimestamp(Configuration $config, string $pathname): Configuration
+    {
+        $time = @\filemtime($pathname);
+
+        if ($time === false) {
+            return $config;
         }
 
-        if (\property_exists($data, 'entrypoint')) {
-            $config = $config->withEntrypoint($data->entrypoint);
+        if ($time === null) {
+            return $config;
         }
 
-        if (\property_exists($data, 'box-version')) {
-            /** @phpstan-ignore-next-line */
-            $config = $config->withBoxVersion($data->{'box-version'});
+        return $config->withTimestamp($time);
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendName(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['name'])) {
+            return $config;
         }
 
-        if (\property_exists($data, 'output')) {
-            $config = $config->withOutputDirectory($data->output);
+        return $config->withName($input['name']);
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendEntrypoint(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['entrypoint'])) {
+            return $config;
         }
 
-        if (\property_exists($data, 'root')) {
-            $root = $data->root;
+        return $config->withEntrypoint($input['entrypoint']);
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendBoxVersion(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['box-version'])) {
+            return $config;
+        }
+
+        return $config->withBoxVersion($input['box-version']);
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendOutputDirectory(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['output'])) {
+            return $config;
+        }
+
+        return $config->withOutputDirectory($input['output']);
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendRootDirectory(array $input, Configuration $config): Configuration
+    {
+        if (isset($input['root'])) {
+            $root = $input['root'];
 
             if (\is_dir($root)) {
                 /** @var non-empty-string $root */
                 $root = (string) @\realpath($root);
             }
 
-            $config = $config->withRootDirectory($root);
-        } else {
-            /** @var non-empty-string $root */
-            $root = \dirname((string) \realpath($this->filename));
-
-            $config = $config->withRootDirectory($root);
+            return $config->withRootDirectory($root);
         }
 
-        if (\property_exists($data, 'build')) {
-            if (\property_exists($data->build, 'files')) {
-                foreach ($data->build->files as $fileInclusion) {
-                    $config = $config->withAddedBuildInclusion(
-                        config: $this->createFileInclusion($fileInclusion),
-                    );
-                }
-            }
+        /** @var non-empty-string $root */
+        $root = \dirname((string) \realpath($this->filename));
 
-            if (\property_exists($data->build, 'directories')) {
-                foreach ($data->build->directories as $directoryInclusion) {
-                    $config = $config->withAddedBuildInclusion(
-                        config: $this->createDirectoryInclusion($directoryInclusion),
-                    );
-                }
-            }
+        return $config->withRootDirectory($root);
+    }
 
-            if (\property_exists($data->build, 'finder')) {
-                foreach ($data->build->finder as $finder) {
-                    $config = $config->withAddedBuildInclusion(
-                        config: $this->createFinderInclusion($finder),
-                    );
-                }
-            }
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendBuildConfiguration(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['build'])) {
+            return $config;
         }
 
-        if (\property_exists($data, 'arch')) {
-            $config = $config->withArchitectures($data->arch);
+        $config = $this->extendBuildFilesConfiguration($input['build'], $config);
+        $config = $this->extendBuildDirectoriesConfiguration($input['build'], $config);
+        $config = $this->extendBuildFinderConfiguration($input['build'], $config);
+
+        return $config;
+    }
+
+    /**
+     * @param RawBuildConfigurationType $input
+     */
+    private function extendBuildFilesConfiguration(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['files'])) {
+            return $config;
         }
 
-        if (\property_exists($data, 'platform')) {
-            $config = $config->withPlatforms($data->platform);
+        foreach ($input['files'] as $fileInclusion) {
+            $config = $config->withAddedBuildInclusion(
+                config: $this->createFileInclusion($fileInclusion),
+            );
         }
 
-        if (\property_exists($data, 'ini')) {
-            /**
-             * @var non-empty-string $iniConfig
-             * @var scalar $iniValue
-             */
-            foreach ((array) $data->ini as $iniConfig => $iniValue) {
-                $config = $config->withAddedIni($iniConfig, $iniValue);
-            }
+        return $config;
+    }
+
+    /**
+     * @param RawBuildConfigurationType $input
+     */
+    private function extendBuildDirectoriesConfiguration(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['directories'])) {
+            return $config;
         }
 
-        if (\property_exists($data, 'mount')) {
-            /**
-             * @var non-empty-string $mountDirectory
-             */
-            foreach ((array) $data->mount as $mountDirectory) {
-                $config = $config->withAddedMount($mountDirectory);
-            }
+        foreach ($input['directories'] as $directoryInclusion) {
+            $config = $config->withAddedBuildInclusion(
+                config: $this->createDirectoryInclusion($directoryInclusion),
+            );
+        }
+
+        return $config;
+    }
+
+    /**
+     * @param RawBuildConfigurationType $input
+     */
+    private function extendBuildFinderConfiguration(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['finder'])) {
+            return $config;
+        }
+
+        foreach ($input['finder'] as $finder) {
+            $config = $config->withAddedBuildInclusion(
+                config: $this->createFinderInclusion($finder),
+            );
+        }
+
+        return $config;
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendIni(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['ini'])) {
+            return $config;
+        }
+
+        foreach ((array) $input['ini'] as $iniConfig => $iniValue) {
+            $config = $config->withAddedIni($iniConfig, $iniValue);
+        }
+
+        return $config;
+    }
+
+    /**
+     * @param RawConfigurationType $input
+     */
+    private function extendMount(array $input, Configuration $config): Configuration
+    {
+        if (!isset($input['mount'])) {
+            return $config;
+        }
+
+        foreach ((array) $input['mount'] as $mountDirectory) {
+            $config = $config->withAddedMount($mountDirectory);
         }
 
         return $config;
@@ -299,25 +307,25 @@ final class JsonConfigurationFactory implements ConfigurationFactoryInterface
     /**
      * @param RawFinderInclusionType $inclusion
      */
-    private function createFinderInclusion(object $inclusion): IncludeConfiguration
+    private function createFinderInclusion(array $inclusion): IncludeConfiguration
     {
-        $directories = $inclusion->directory;
+        $directories = $inclusion['directory'];
 
         /**
          * @phpstan-var non-empty-string|list<non-empty-string> $notDirectories
          *
          * @phpstan-ignore-next-line : False-positive; null-coalescence using
          */
-        $notDirectories = $inclusion->{'not-directory'} ?? [];
+        $notDirectories = $inclusion['not-directory'] ?? [];
 
-        $names = $inclusion->name ?? [];
+        $names = $inclusion['name'] ?? [];
 
         /**
          * @phpstan-var non-empty-string|list<non-empty-string> $notNames
          *
          * @phpstan-ignore-next-line : False-positive; null-coalescence using
          */
-        $notNames = $inclusion->{'not-name'} ?? [];
+        $notNames = $inclusion['not-name'] ?? [];
 
         return new FinderIncludeConfiguration(
             directories: \is_string($directories) ? [$directories] : $directories,

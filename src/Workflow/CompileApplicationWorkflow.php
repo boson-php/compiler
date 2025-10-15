@@ -4,38 +4,31 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Workflow;
 
-use Boson\Component\Compiler\Action\ClearBuildAssemblyDirectoryAction;
-use Boson\Component\Compiler\Action\CompileAction;
-use Boson\Component\Compiler\Action\CopyRuntimeBinaryAction;
-use Boson\Component\Compiler\Action\CreateBuildAssemblyDirectoryAction;
-use Boson\Component\Compiler\Assembly\Assembly;
+use Boson\Component\Compiler\Action\ClearBuildTargetDirectoryAction;
+use Boson\Component\Compiler\Action\CreateBuildTargetDirectoryAction;
 use Boson\Component\Compiler\Configuration;
 
 final readonly class CompileApplicationWorkflow
 {
     /**
-     * @param iterable<mixed, Assembly> $assemblies
-     *
      * @return iterable<mixed, \UnitEnum>
      */
-    public function process(Configuration $config, iterable $assemblies): iterable
+    public function process(Configuration $config): iterable
     {
-        foreach ($assemblies as $assembly) {
+        foreach ($config->targets as $target) {
             // Clear build directory
-            yield from new ClearBuildAssemblyDirectoryAction($assembly)
+            yield from new ClearBuildTargetDirectoryAction($target)
                 ->process($config);
 
             // Create build directory
-            yield from new CreateBuildAssemblyDirectoryAction($assembly)
+            yield from new CreateBuildTargetDirectoryAction($target)
                 ->process($config);
 
-            // Compile assembly
-            yield from new CompileAction($assembly)
-                ->process($config);
-
-            // Copy runtime binaries
-            yield from new CopyRuntimeBinaryAction($assembly)
-                ->process($config);
+            yield from $target->compile($config);
         }
+
+        // TODO Copy runtime binaries
+        // yield from new CopyRuntimeBinaryAction($assembly)
+        //     ->process($config);
     }
 }

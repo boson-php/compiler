@@ -2,24 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Boson\Component\Compiler\Assembly;
+namespace Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory;
 
-enum AssemblyEdition: string
+enum BuiltinPlatformTarget: string
 {
-    /**
-     * Minimal PHP edition.
-     *
-     * Contains only essential and some lightweight extensions.
-     */
-    case Minimal = 'minimal';
-
-    /**
-     * Standard PHP edition.
-     *
-     * Contains all the most popular extensions (except mysql and
-     * postgres PDO drivers).
-     */
-    case Standard = 'standard';
+    case Windows = 'windows';
+    case Linux = 'linux';
+    case MacOS = 'macos';
 
     /**
      * @api
@@ -29,8 +18,9 @@ enum AssemblyEdition: string
     private static function normalize(string $name): string
     {
         return match (\strtolower($name)) {
-            'min' => self::Minimal->value,
-            'std', 'default' => self::Standard->value,
+            'win32', 'win64', 'win' => self::Windows->value,
+            'nix' => self::Linux->value,
+            'darwin' => self::MacOS->value,
             default => $name,
         };
     }

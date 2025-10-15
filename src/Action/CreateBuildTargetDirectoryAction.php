@@ -7,21 +7,21 @@ namespace Boson\Component\Compiler\Action;
 use Boson\Component\Compiler\Configuration;
 
 /**
- * @template-extends AssemblyAction<CreateBuildDirectoryStatus>
+ * @template-extends TargetAction<CreateBuildDirectoryStatus>
  */
-final readonly class CreateBuildAssemblyDirectoryAction extends AssemblyAction
+final readonly class CreateBuildTargetDirectoryAction extends TargetAction
 {
     public function process(Configuration $config): iterable
     {
-        yield $this->assembly => CreateBuildDirectoryStatus::ReadyToCreate;
+        yield $this->target => CreateBuildDirectoryStatus::ReadyToCreate;
 
-        $directory = $this->assembly->getBuildDirectory($config);
+        $directory = $this->getBuildDirectory($config);
 
         if (!\is_dir($directory)) {
             $this->createOrFail($directory);
         }
 
-        yield $this->assembly => CreateBuildDirectoryStatus::Created;
+        yield $this->target => CreateBuildDirectoryStatus::Created;
     }
 
     private function createOrFail(string $directory): void
@@ -33,9 +33,9 @@ final readonly class CreateBuildAssemblyDirectoryAction extends AssemblyAction
         }
 
         throw new \RuntimeException(\sprintf(
-            'Could not create build directory "%s" for assembly "%s"',
+            'Could not create build directory "%s" for "%s" compilation target',
             $directory,
-            $this->assembly,
+            $this->target->type,
         ));
     }
 }

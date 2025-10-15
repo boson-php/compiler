@@ -7,15 +7,15 @@ namespace Boson\Component\Compiler\Action;
 use Boson\Component\Compiler\Configuration;
 
 /**
- * @template-extends AssemblyAction<ClearBuildAssemblyDirectoryStatus>
+ * @template-extends TargetAction<ClearBuildAssemblyDirectoryStatus>
  */
-final readonly class ClearBuildAssemblyDirectoryAction extends AssemblyAction
+final readonly class ClearBuildTargetDirectoryAction extends TargetAction
 {
     public function process(Configuration $config): iterable
     {
-        yield $this->assembly => ClearBuildAssemblyDirectoryStatus::ReadyToClean;
+        yield $this->target => ClearBuildAssemblyDirectoryStatus::ReadyToClean;
 
-        $directory = $this->assembly->getBuildDirectory($config);
+        $directory = $this->getBuildDirectory($config);
 
         if (\is_dir($directory)) {
             /** @var \SplFileInfo $file */
@@ -38,7 +38,7 @@ final readonly class ClearBuildAssemblyDirectoryAction extends AssemblyAction
             \rmdir($directory);
         }
 
-        yield $this->assembly => ClearBuildAssemblyDirectoryStatus::Cleaned;
+        yield $this->target => ClearBuildAssemblyDirectoryStatus::Cleaned;
     }
 
     /**

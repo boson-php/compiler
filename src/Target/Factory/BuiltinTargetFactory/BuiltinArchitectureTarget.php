@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Boson\Component\Compiler\Assembly;
+namespace Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory;
 
-enum AssemblyArchitecture: string
+enum BuiltinArchitectureTarget: string
 {
     case Amd64 = 'amd64';
     case Arm64 = 'aarch64';

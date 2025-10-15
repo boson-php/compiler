@@ -25,16 +25,6 @@ abstract class ConfigAwareCommand extends Command
         $this->initializeTempOption();
     }
 
-    private function getDefaultConfiguration(): Configuration
-    {
-        return $this->config ??= $this->createDefaultConfiguration();
-    }
-
-    private function createDefaultConfiguration(): Configuration
-    {
-        return Configuration::createDefaultConfiguration();
-    }
-
     protected function initializeConfigOption(): void
     {
         $this->addOption(
@@ -82,31 +72,66 @@ abstract class ConfigAwareCommand extends Command
         );
     }
 
-    private function getDefaultConfigurationWithJson(InputInterface $input): Configuration
+    /**
+     * Creates a new configuration instance
+     */
+    private function createDefaultConfiguration(): Configuration
+    {
+        return Configuration::createDefaultConfiguration();
+    }
+
+    /**
+     * Return new configuration instance
+     */
+    private function getDefaultConfiguration(): Configuration
+    {
+        return $this->config ??= $this->createDefaultConfiguration();
+    }
+
+    /**
+     * Returns configuration pathname using input "--config" option resolving
+     */
+    private function getConfigurationPathname(InputInterface $input): string
     {
         $pathname = $input->hasOption('config')
             ? $input->getOption('config')
-                ?? JsonConfigurationFactory::DEFAULT_JSON_FILENAME
+            ?? JsonConfigurationFactory::DEFAULT_JSON_FILENAME
             : JsonConfigurationFactory::DEFAULT_JSON_FILENAME;
 
         if (!\is_string($pathname) || $pathname === '') {
             throw new \InvalidArgumentException('Could not read configuration file');
         }
 
+        return $pathname;
+    }
+
+    /**
+     * Returns new configuration with added JSON config file
+     */
+    private function getDefaultConfigurationWithAddedJson(InputInterface $input): Configuration
+    {
+        $pathname = $this->getConfigurationPathname($input);
+
         return new JsonConfigurationFactory($pathname)
             ->createConfiguration($this->getDefaultConfiguration());
     }
 
-    private function getDefaultConfigurationWithInput(InputInterface $input): Configuration
+    /**
+     * Returns new configuration with added input (stdin) config arguments
+     */
+    private function getDefaultConfigurationWithAddedInput(InputInterface $input): Configuration
     {
-        $config = $this->getDefaultConfigurationWithJson($input);
+        $config = $this->getDefaultConfigurationWithAddedJson($input);
 
         return new ConsoleInputConfigurationFactory($input)
             ->createConfiguration($config);
     }
 
+    /**
+     * Returns new configuration
+     */
     protected function getConfiguration(InputInterface $input): Configuration
     {
-        return $this->getDefaultConfigurationWithInput($input);
+        return $this->getDefaultConfigurationWithAddedInput($input);
     }
 }

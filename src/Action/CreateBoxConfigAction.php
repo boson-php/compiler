@@ -21,6 +21,10 @@ final readonly class CreateBoxConfigAction implements ActionInterface
         // Update box.json config in case of configuration
         // file is more relevant than generated config file.
         if ($this->getBoxConfigTimestamp($config) < $config->timestamp) {
+            if (!\is_dir($directory = \dirname($config->boxConfigPathname))) {
+                @\mkdir($directory, recursive: true);
+            }
+
             \file_put_contents($config->boxConfigPathname, \json_encode(
                 value: $this->getBoxConfig($config),
                 flags: \JSON_PRETTY_PRINT | \JSON_THROW_ON_ERROR,

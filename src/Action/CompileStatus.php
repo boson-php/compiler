@@ -7,5 +7,6 @@ namespace Boson\Component\Compiler\Action;
 enum CompileStatus
 {
     case ReadyToCompile;
+    case Progress;
     case Compiled;
 }

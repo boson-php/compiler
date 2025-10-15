@@ -11,6 +11,11 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 final class InitCommand extends ConfigAwareCommand
 {
+    /**
+     * @var non-empty-string
+     */
+    private const string BOSON_JSON_TEMPLATE = __DIR__ . '/../../resources/boson.json';
+
     public function __construct(?string $name = null)
     {
         parent::__construct($name ?? 'init');
@@ -49,32 +54,11 @@ final class InitCommand extends ConfigAwareCommand
             }
         }
 
-        \file_put_contents($boson, \json_encode([
-            'name' => 'app',
-            'arch' => ['amd64', 'aarch64'],
-            'platform' => ['windows', 'linux', 'macos'],
-            'entrypoint' => 'index.php',
-            'output' => './build',
-            'build' => [
-                'directories' => [
-                    'public',
-                ],
-                'finder' => [
-                    [
-                        'directory' => 'src',
-                        'name' => '*.php',
-                    ],
-                    [
-                        'directory' => 'vendor',
-                        'not-directory' => 'vendor/boson-php/compiler',
-                        'name' => '*.php',
-                    ],
-                ],
-            ],
-            'ini' => [
-                'memory_limit' => '128M',
-            ],
-        ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT));
+        \file_put_contents(
+            filename: $boson,
+            data: \json_encode(\file_get_contents(self::BOSON_JSON_TEMPLATE)),
+            flags: \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT,
+        );
 
         $output->writeln(\sprintf(
             ' <info>●</info> Configuration "<comment>%s</comment>" was successfully created',

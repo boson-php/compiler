@@ -50,6 +50,10 @@ final readonly class CreateBoxStubAction implements ActionInterface
 
         $stub = $this->applyVariables($config, $stub);
 
+        if (!\is_dir($directory = \dirname($config->boxStubPathname))) {
+            @\mkdir($directory, recursive: true);
+        }
+
         \file_put_contents($config->boxStubPathname, $stub);
     }
 }

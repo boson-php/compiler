@@ -3,6 +3,7 @@
     "title": "Boson Configuration",
     "type": "object",
     "additionalProperties": false,
+    "required": ["target"],
     "properties": {
         "name": {
             "type": "string",
@@ -13,6 +14,14 @@
             "type": "string",
             "minLength": 1,
             "description": "An entrypoint php file"
+        },
+        "target": {
+            "type": "array",
+            "minLength": 1,
+            "description": "List of compilation targets",
+            "items": {
+                "$ref": "#/$defs/compilation-target"
+            }
         },
         "output": {
             "type": "string",
@@ -84,73 +93,16 @@
                         "required": ["directory"],
                         "properties": {
                             "directory": {
-                                "oneOf": [
-                                    {
-                                        "type": "string",
-                                        "description": "The directory in which the files will be searched",
-                                        "minLength": 1
-                                    },
-                                    {
-                                        "type": "array",
-                                        "minLength": 1,
-                                        "items": {
-                                            "type": "string",
-                                            "description": "The directory in which the files will be searched",
-                                            "minLength": 1
-                                        }
-                                    }
-                                ]
+                                "$ref": "#/$defs/filter-reference"
                             },
                             "not-directory": {
-                                "oneOf": [
-                                    {
-                                        "type": "string",
-                                        "description": "The directory exclusion filter",
-                                        "minLength": 1
-                                    },
-                                    {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "description": "The directory exclusion filter",
-                                            "minLength": 1
-                                        }
-                                    }
-                                ]
+                                "$ref": "#/$defs/filter-reference"
                             },
                             "name": {
-                                "oneOf": [
-                                    {
-                                        "type": "string",
-                                        "description": "The name filter for files",
-                                        "minLength": 1
-                                    },
-                                    {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "description": "The name filter for files",
-                                            "minLength": 1
-                                        }
-                                    }
-                                ]
+                                "$ref": "#/$defs/filter-reference"
                             },
                             "not-name": {
-                                "oneOf": [
-                                    {
-                                        "type": "string",
-                                        "description": "The name exclusion filter for files",
-                                        "minLength": 1
-                                    },
-                                    {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "description": "The name exclusion filter for files",
-                                            "minLength": 1
-                                        }
-                                    }
-                                ]
+                                "$ref": "#/$defs/filter-reference"
                             }
                         }
                     }
@@ -163,21 +115,8 @@
             "additionalProperties": false,
             "patternProperties": {
                 "^.+$": {
-                    "description": "Additional php.ini key",
-                    "oneOf": [
-                        {
-                            "type": "string",
-                            "description": "Additional php.ini string value"
-                        },
-                        {
-                            "type": "number",
-                            "description": "Additional php.ini number (int or false) value"
-                        },
-                        {
-                            "type": "boolean",
-                            "description": "Additional php.ini boolean value"
-                        }
-                    ]
+                    "$ref": "#/$defs/ini-value",
+                    "description": "Additional php.ini key"
                 }
             }
         },
@@ -188,6 +127,58 @@
         }
     },
     "$defs": {
-
+        "compilation-target": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+                "output": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The compilation output directory name"
+                },
+                "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The compilation target type"
+                }
+            }
+        },
+        "filter-reference": {
+            "oneOf": [
+                {
+                    "type": "string",
+                    "description": "The name of file or directory",
+                    "minLength": 1
+                },
+                {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "description": "List of filenames or directories",
+                        "minLength": 1
+                    }
+                }
+            ]
+        },
+        "ini-value": {
+            "oneOf": [
+                {"$ref": "#/$defs/ini-string-value"},
+                {"$ref": "#/$defs/ini-number-value"},
+                {"$ref": "#/$defs/ini-boolean-value"}
+            ]
+        },
+        "ini-string-value": {
+            "type": "string",
+            "description": "Additional php.ini string value"
+        },
+        "ini-number-value": {
+            "type": "number",
+            "description": "Additional php.ini number (int or float) value"
+        },
+        "ini-boolean-value": {
+            "type": "boolean",
+            "description": "Additional php.ini boolean value"
+        }
     }
 }
