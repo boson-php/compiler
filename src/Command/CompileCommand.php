@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Command;
 
-use Boson\Component\Compiler\Action\ClearBuildAssemblyDirectoryStatus;
-use Boson\Component\Compiler\Action\CompileStatus;
-use Boson\Component\Compiler\Action\CreateBuildAssemblyDirectoryStatus;
-use Boson\Component\Compiler\Command\PackCommand\PackApplicationWorkflowPresenter;
-use Boson\Component\Compiler\Workflow\CompileApplicationWorkflow;
+use Boson\Component\Compiler\Command\Presenter\CompileApplicationWorkflowPresenter;
+use Boson\Component\Compiler\Command\Presenter\PackApplicationWorkflowPresenter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class CompileCommand extends ConfigAwareCommand
 {
@@ -37,6 +35,8 @@ final class CompileCommand extends ConfigAwareCommand
     {
         $config = $this->getConfiguration($input);
 
+        $style = new SymfonyStyle($input, $output);
+
         // ---------------------------------------------------------------------
         //  Pack Workflow
         // ---------------------------------------------------------------------
@@ -44,7 +44,7 @@ final class CompileCommand extends ConfigAwareCommand
             $pack = new PackApplicationWorkflowPresenter();
 
             try {
-                $pack->process($config, $output);
+                $pack->process($config, $style);
             } catch (\Throwable $e) {
                 return $this->fail($output, $e);
             }
@@ -55,65 +55,17 @@ final class CompileCommand extends ConfigAwareCommand
             ));
         }
 
-        $workflow = new CompileApplicationWorkflow();
-
         $output->writeln(\sprintf(
             ' · Build an application in "<comment>%s</comment>"',
             $config->output,
         ));
 
-        /** @var \Stringable|string $data */
-        foreach ($workflow->process($config) as $data => $status) {
-            switch ($status) {
-                case ClearBuildAssemblyDirectoryStatus::ReadyToClean:
-                    $output->write(\sprintf(
-                        '   [<comment>%s</comment>] Cleanup build directory...',
-                        $data,
-                    ));
-                    break;
+        $compile = new CompileApplicationWorkflowPresenter();
 
-                case ClearBuildAssemblyDirectoryStatus::Cleaning:
-                    $output->write(\sprintf(
-                        "\33[2K\r   ↳ Removing \"<comment>%s</comment>\"",
-                        $data,
-                    ));
-                    break;
-
-                case ClearBuildAssemblyDirectoryStatus::Cleaned:
-                    $output->writeln(\sprintf(
-                        "\33[2K\r   [<comment>%s</comment>] Build directory is cleaned",
-                        $data,
-                    ));
-                    break;
-
-                case CreateBuildAssemblyDirectoryStatus::ReadyToCreate:
-                    $output->write(\sprintf(
-                        '   [<comment>%s</comment>] Prepare build directory',
-                        $data,
-                    ));
-                    break;
-
-                case CreateBuildAssemblyDirectoryStatus::Created:
-                    $output->writeln(\sprintf(
-                        "\33[2K\r   [<comment>%s</comment>] Build directory is available",
-                        $data,
-                    ));
-                    break;
-
-                case CompileStatus::ReadyToCompile:
-                    $output->write(\sprintf(
-                        '   [<comment>%s</comment>] Compilation...',
-                        $data,
-                    ));
-                    break;
-
-                case CompileStatus::Compiled:
-                    $output->writeln(\sprintf(
-                        "\33[2K\r   [<comment>%s</comment>] Compiled",
-                        $data,
-                    ));
-                    break;
-            }
+        try {
+            $compile->process($config, $style);
+        } catch (\Throwable $e) {
+            return $this->fail($output, $e);
         }
 
         return self::SUCCESS;

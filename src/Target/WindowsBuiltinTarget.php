@@ -15,9 +15,9 @@ final readonly class WindowsBuiltinTarget extends BuiltinTarget
      */
     private const string DEFAULT_RUNTIME_BINARY_NAME = 'libboson-windows-x86_64.dll';
 
-    protected function getTargetBinary(string $output, Configuration $config): string
+    protected function getTargetFilename(Configuration $config): string
     {
-        return $output . '/' . $config->name . '.exe';
+        return $config->name . '.exe';
     }
 
     protected function getRuntimeBinaryFilename(): string

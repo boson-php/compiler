@@ -4,61 +4,26 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Target;
 
+use Boson\Component\Compiler\Action\CopyAllRuntimeBinariesAction;
+use Boson\Component\Compiler\Action\CopyPharAction;
+use Boson\Component\Compiler\Action\ValidateOutputDirectoryAction;
+use Boson\Component\Compiler\Action\ValidatePharAction;
 use Boson\Component\Compiler\Configuration;
 
 final readonly class PharTarget extends Target
 {
     protected function process(Configuration $config): iterable
     {
-        yield $this->validatePharArchive($config);
-        yield $output = $this->getAndValidateBuildDirectory($config);
-        yield $this->copyArchive($config, $output);
-        yield from $this->copyRuntimeBinaries($output);
-    }
+        yield from new ValidatePharAction($this)
+            ->process($config);
 
-    private function copyRuntimeBinaries(string $output): iterable
-    {
-        foreach ($this->getSourceRuntimeBinaries() as $sourceBinary) {
-            $targetBinary = $output . \DIRECTORY_SEPARATOR . \basename($sourceBinary);
+        yield from new ValidateOutputDirectoryAction($this)
+            ->process($config);
 
-            yield $this->copyOrFail($sourceBinary, $targetBinary);
-        }
-    }
+        yield from new CopyPharAction($this)
+            ->process($config);
 
-    /**
-     * @return iterable<array-key, non-empty-string>
-     */
-    private function getSourceRuntimeBinaries(): iterable
-    {
-        $binaries = new \DirectoryIterator($this->getSourceRuntimeBinDirectory());
-
-        /** @var \SplFileInfo $binary */
-        foreach ($binaries as $binary) {
-            if ($binary->isDot() || $binary->isDir()) {
-                continue;
-            }
-
-            /** @var non-empty-string */
-            yield $binary->getPathname();
-        }
-    }
-
-    private function copyArchive(Configuration $config, string $output): true
-    {
-        $targetPharPathname = $output . \DIRECTORY_SEPARATOR . \basename($config->pharPathname);
-
-        return $this->copyOrFail($config->pharPathname, $targetPharPathname);
-    }
-
-    private function validatePharArchive(Configuration $config): true
-    {
-        if (\is_readable($config->pharPathname)) {
-            return true;
-        }
-
-        throw new \RuntimeException(\sprintf(
-            'Application archive "%s" is not available',
-            $config->pharPathname,
-        ));
+        yield from new CopyAllRuntimeBinariesAction($this)
+            ->process($config);
     }
 }

@@ -8,7 +8,7 @@ use Boson\Component\Compiler\Action\ClearBuildTargetDirectoryAction;
 use Boson\Component\Compiler\Action\CreateBuildTargetDirectoryAction;
 use Boson\Component\Compiler\Configuration;
 
-final readonly class CompileApplicationWorkflow
+final readonly class CompileApplicationWorkflow implements WorkflowInterface
 {
     /**
      * @return iterable<mixed, \UnitEnum>

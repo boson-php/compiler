@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Command;
 
-use Boson\Component\Compiler\Command\PackCommand\PackApplicationWorkflowPresenter;
+use Boson\Component\Compiler\Command\Presenter\PackApplicationWorkflowPresenter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class PackCommand extends ConfigAwareCommand
 {
@@ -26,10 +27,12 @@ final class PackCommand extends ConfigAwareCommand
     {
         $config = $this->getConfiguration($input);
 
+        $style = new SymfonyStyle($input, $output);
+
         $presenter = new PackApplicationWorkflowPresenter();
 
         try {
-            $presenter->process($config, $output);
+            $presenter->process($config, $style);
         } catch (\Throwable $e) {
             return $this->fail($output, $e);
         }

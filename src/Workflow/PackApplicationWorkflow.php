@@ -12,7 +12,7 @@ use Boson\Component\Compiler\Action\PackBoxAction;
 use Boson\Component\Compiler\Configuration;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
-final readonly class PackApplicationWorkflow
+final readonly class PackApplicationWorkflow implements WorkflowInterface
 {
     /**
      * @return iterable<mixed, \UnitEnum>

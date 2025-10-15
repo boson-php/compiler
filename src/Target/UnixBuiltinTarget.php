@@ -4,28 +4,25 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Target;
 
+use Boson\Component\Compiler\Action\ApplyExecutePermissionsAction;
 use Boson\Component\Compiler\Configuration;
 
 abstract readonly class UnixBuiltinTarget extends BuiltinTarget
 {
-    protected function getTargetBinary(string $output, Configuration $config): string
+    protected function getTargetFilename(Configuration $config): string
     {
-        return $output . '/' . $config->name;
+        return $config->name;
     }
 
     #[\Override]
-    protected function build(string $target, Configuration $config): iterable
+    protected function process(Configuration $config): iterable
     {
-        yield from parent::build($target, $config);
+        yield from parent::process($config);
 
-        yield from $this->applyExecutePermissions($target);
-    }
-
-    /**
-     * @return iterable<array-key, bool>
-     */
-    protected function applyExecutePermissions(string $target): iterable
-    {
-        yield \chmod($target, 0o755);
+        yield from new ApplyExecutePermissionsAction(
+            targetFilename: $this->getTargetFilename($config),
+            target: $this
+        )
+            ->process($config);
     }
 }

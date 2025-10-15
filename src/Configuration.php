@@ -31,7 +31,7 @@ final class Configuration
      *
      * @var non-empty-string
      */
-    public const string DEFAULT_BOX_VERSION = '4.6.6';
+    public const string DEFAULT_BOX_VERSION = '4.6.7';
 
     /**
      * Default build directory used when not specified.

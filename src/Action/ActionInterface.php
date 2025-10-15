@@ -8,11 +8,12 @@ use Boson\Component\Compiler\Configuration;
 
 /**
  * @template TStatus of \UnitEnum
+ * @template TKey of mixed = mixed
  */
 interface ActionInterface
 {
     /**
-     * @return iterable<mixed, TStatus>
+     * @return iterable<TKey, TStatus>
      */
     public function process(Configuration $config): iterable;
 }

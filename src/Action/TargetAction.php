@@ -10,7 +10,7 @@ use Boson\Component\Compiler\Target\TargetInterface;
 /**
  * @template TStatus of \UnitEnum
  *
- * @template-implements ActionInterface<TStatus>
+ * @template-implements ActionInterface<TStatus, TargetInterface>
  */
 abstract readonly class TargetAction implements ActionInterface
 {

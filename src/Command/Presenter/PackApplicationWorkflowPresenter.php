@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Boson\Component\Compiler\Command\PackCommand;
+namespace Boson\Component\Compiler\Command\Presenter;
 
 use Boson\Component\Compiler\Action\CreateBoxConfigStatus;
 use Boson\Component\Compiler\Action\CreateBuildDirectoryStatus;
@@ -11,48 +11,51 @@ use Boson\Component\Compiler\Action\PackBoxStatus;
 use Boson\Component\Compiler\Configuration;
 use Boson\Component\Compiler\Workflow\PackApplicationWorkflow;
 use Symfony\Component\Console\Helper\ProgressBar;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
-final readonly class PackApplicationWorkflowPresenter
+/**
+ * @template-extends ConsolePresenter<PackApplicationWorkflow>
+ */
+final readonly class PackApplicationWorkflowPresenter extends ConsolePresenter
 {
-    private PackApplicationWorkflow $workflow;
-
     public function __construct()
     {
-        $this->workflow = new PackApplicationWorkflow();
+        parent::__construct(new PackApplicationWorkflow());
     }
 
-    public function process(Configuration $config, OutputInterface $output): void
+    public function process(Configuration $config, SymfonyStyle $style): void
     {
-        $progress = new ProgressBar($output);
+        $progress = new ProgressBar($style);
         $progress->setFormat('[%bar%] %message%');
 
-        foreach ($this->workflow->process($config) as $process) {
+        $buffer = [];
+
+        foreach ($this->workflow->process($config) as $data => $process) {
             switch ($process) {
                 case CreateBuildDirectoryStatus::ReadyToCreate:
-                    $output->write(' · Checking build directory');
+                    $style->write(' · Checking build directory');
                     break;
 
                 case CreateBuildDirectoryStatus::Created:
-                    $output->writeln(\sprintf(
+                    $style->writeln(\sprintf(
                         "\33[2K\r <info>●</info> Build directory \"<comment>%s</comment>\" is available",
                         $config->output,
                     ));
                     break;
 
                 case CreateBoxConfigStatus::ReadyToCreate:
-                    $output->write(' · Checking box config');
+                    $style->write(' · Checking box config');
                     break;
 
                 case CreateBoxConfigStatus::Created:
-                    $output->writeln(\sprintf(
+                    $style->writeln(\sprintf(
                         "\33[2K\r <info>●</info> Config \"<comment>%s</comment>\" is created",
                         $config->boxConfigPathname,
                     ));
                     break;
 
                 case DownloadBoxStatus::ReadyToDownload:
-                    $output->write(' · Checking <comment>humbug/box</comment> installation');
+                    $style->write(' · Checking <comment>humbug/box</comment> installation');
                     break;
 
                 case DownloadBoxStatus::Downloading:
@@ -62,24 +65,24 @@ final readonly class PackApplicationWorkflowPresenter
 
                 case DownloadBoxStatus::Complete:
                     $progress->clear();
-                    $output->writeln(\sprintf(
+                    $style->writeln(\sprintf(
                         "\33[2K\r <info>●</info> The \"<comment>humbug/box</comment>\" <info>v%s</info> is ready",
                         $config->boxVersion,
                     ));
                     break;
 
                 case PackBoxStatus::ReadyToPack:
-                    $output->write(' · Packing application');
+                    $style->write(' · Pack an application');
                     break;
 
                 case PackBoxStatus::Packing:
-                    $progress->setMessage('Packing application');
+                    $progress->setMessage("Pack an application\n" . (string) $data);
                     $progress->advance();
                     break;
 
                 case PackBoxStatus::Packed:
                     $progress->clear();
-                    $output->writeln(\sprintf(
+                    $style->writeln(\sprintf(
                         "\33[2K\r <info>●</info> Application packed \"<comment>%s</comment>\"",
                         $config->pharPathname,
                     ));
