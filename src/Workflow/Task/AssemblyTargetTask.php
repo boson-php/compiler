@@ -11,17 +11,24 @@ use Boson\Component\Compiler\Workflow\Task\Support\Path;
 
 final readonly class AssemblyTargetTask implements TaskInterface
 {
+    /**
+     * @var non-empty-string
+     */
+    public string $sfxPathname;
+
+    /**
+     * @var non-empty-string
+     */
+    public string $targetPathname;
+
     public function __construct(
-        /**
-         * @var non-empty-string
-         */
-        public string $sfxPathname,
-        /**
-         * @var non-empty-string
-         */
-        public string $targetPathname,
+        string $sfxPathname,
+        string $targetPathname,
         public TargetInterface $target,
-    ) {}
+    ) {
+        $this->targetPathname = Path::normalize($targetPathname);
+        $this->sfxPathname = Path::normalize($sfxPathname);
+    }
 
     public function __invoke(Configuration $config): void
     {
