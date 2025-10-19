@@ -34,27 +34,27 @@ final readonly class AssemblyTargetTask implements TaskInterface
     {
         Task::info('Assembly target %s', [$this->target->output]);
 
-        $targetStream = @\fopen($this->targetPathname, 'wb+');
+        $stream = @\fopen($this->targetPathname, 'wb+');
 
         Task::notify('Created output file %s', [
             $this->targetPathname,
         ]);
 
-        if ($targetStream === false) {
+        if ($stream === false) {
             throw new \RuntimeException(\sprintf(
                 'Unable to create target binary "%s"',
                 $this->targetPathname,
             ));
         }
 
-        \flock($targetStream, \LOCK_EX);
+        \flock($stream, \LOCK_EX);
 
-        $this->appendSfxArchive($targetStream, $config);
-        $this->appendPhpConfig($targetStream, $config);
-        $this->appendSource($targetStream, $config);
+        $this->appendSfxArchive($stream, $config);
+        $this->appendPhpConfig($stream, $config);
+        $this->appendSource($stream, $config);
 
-        \flock($targetStream, \LOCK_UN);
-        \fclose($targetStream);
+        \flock($stream, \LOCK_UN);
+        \fclose($stream);
     }
 
     /**
@@ -99,6 +99,8 @@ final readonly class AssemblyTargetTask implements TaskInterface
             target: $this->target,
         ));
 
+        $ini = \trim($ini);
+
         \fwrite($stream, "\xfd\xf6\x69\xe6");
         \fwrite($stream, \pack('N', \strlen($ini)));
         \fwrite($stream, $ini);
@@ -132,8 +134,6 @@ final readonly class AssemblyTargetTask implements TaskInterface
         \stream_copy_to_stream($archiveStream, $stream);
         \fclose($archiveStream);
 
-        Task::notify(' prefix has been written', [
-            Path::simplify($config, $this->sfxPathname),
-        ]);
+        Task::notify('Prefix has been written');
     }
 }

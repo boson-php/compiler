@@ -55,6 +55,6 @@ final readonly class CollectInterpreterConfigTask implements TaskInterface
             };
         }
 
-        return $ini . "\n";
+        return $ini;
     }
 }
