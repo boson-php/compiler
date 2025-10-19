@@ -6,6 +6,9 @@ namespace Boson\Component\Compiler\Target;
 
 use Boson\Component\Compiler\Configuration;
 
+/**
+ * @template TCompileResult of mixed = void
+ */
 interface TargetInterface extends \Stringable
 {
     /**
@@ -36,7 +39,12 @@ interface TargetInterface extends \Stringable
     }
 
     /**
-     * @return iterable<string|\Stringable, \UnitEnum>
+     * @return non-empty-string
      */
-    public function compile(Configuration $config): iterable;
+    public function getBuildDirectory(Configuration $config): string;
+
+    /**
+     * @return TCompileResult
+     */
+    public function compile(Configuration $config);
 }

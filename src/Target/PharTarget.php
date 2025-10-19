@@ -4,26 +4,25 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Target;
 
-use Boson\Component\Compiler\Action\CopyAllRuntimeBinariesAction;
-use Boson\Component\Compiler\Action\CopyPharAction;
-use Boson\Component\Compiler\Action\ValidateOutputDirectoryAction;
-use Boson\Component\Compiler\Action\ValidatePharAction;
 use Boson\Component\Compiler\Configuration;
+use Boson\Component\Compiler\Workflow\Task;
+use Boson\Component\Compiler\Workflow\Task\CopyFilesTask;
+use Boson\Component\Compiler\Workflow\Task\CopyFileTask;
 
 final readonly class PharTarget extends Target
 {
-    protected function process(Configuration $config): iterable
+    public function compile(Configuration $config): void
     {
-        yield from new ValidatePharAction($this)
-            ->process($config);
+        $directory = $this->getBuildDirectory($config);
 
-        yield from new ValidateOutputDirectoryAction($this)
-            ->process($config);
+        Task::run($config, new CopyFileTask(
+            sourcePathname: $config->pharPathname,
+            targetPathname: $directory . '/' . \basename($config->pharPathname),
+        ));
 
-        yield from new CopyPharAction($this)
-            ->process($config);
-
-        yield from new CopyAllRuntimeBinariesAction($this)
-            ->process($config);
+        Task::run($config, new CopyFilesTask(
+            sourceDirectory: $this->getSourceRuntimeBinDirectory(),
+            targetDirectory: $directory,
+        ));
     }
 }

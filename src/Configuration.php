@@ -150,7 +150,7 @@ final class Configuration
      *
      * @var non-empty-string
      */
-    public string $boxStubPathname {
+    public string $entrypointPathname {
         get => $this->temp . \DIRECTORY_SEPARATOR . $this->boxStubName;
     }
 
@@ -199,6 +199,15 @@ final class Configuration
         get => \vsprintf('https://github.com/box-project/box/releases/download/%s/box.phar', [
             $this->boxVersion,
         ]);
+    }
+
+    /**
+     * URI for downloading the SFX archive.
+     *
+     * @var non-empty-string
+     */
+    public string $sfxUri {
+        get => 'https://github.com/boson-php/backend-src/releases/download/build-0.19.0/';
     }
 
     /**

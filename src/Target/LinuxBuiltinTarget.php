@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Target;
 
-use Boson\Component\Compiler\Configuration;
 use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinArchitectureTarget;
-use Boson\Component\Compiler\Target\Factory\BuiltinTargetFactory\BuiltinPlatformTarget;
 
 final readonly class LinuxBuiltinTarget extends UnixBuiltinTarget
 {
@@ -19,6 +17,16 @@ final readonly class LinuxBuiltinTarget extends UnixBuiltinTarget
      * @var non-empty-string
      */
     private const string DEFAULT_RUNTIME_ARM64_BINARY_NAME = 'libboson-linux-aarch64.so';
+
+    /**
+     * @var non-empty-string
+     */
+    private const string MINIMAL_EDITION = 'min';
+
+    /**
+     * @var non-empty-string
+     */
+    private const string STANDARD_EDITION = 'standard';
 
     /**
      * @var list<non-empty-lowercase-string>
@@ -38,7 +46,7 @@ final readonly class LinuxBuiltinTarget extends UnixBuiltinTarget
     /**
      * @var list<non-empty-lowercase-string>
      */
-    public const array STANDARD_SFX_EXTENSIONS = [
+    private const array STANDARD_SFX_EXTENSIONS = [
         'ctype',
         'curl',
         'dom',
@@ -64,49 +72,40 @@ final readonly class LinuxBuiltinTarget extends UnixBuiltinTarget
     {
         return match ($this->arch) {
             BuiltinArchitectureTarget::Amd64 => self::DEFAULT_RUNTIME_AMD64_BINARY_NAME,
-            /** @phpstan-ignore-next-line : Allow invalid architecture arm */
             BuiltinArchitectureTarget::Arm64 => self::DEFAULT_RUNTIME_ARM64_BINARY_NAME,
-            default => throw $this->unsupportedArchitectureOfPlatform(
-                platform: BuiltinPlatformTarget::Linux,
-                arch: $this->arch,
-            )
+            default => throw new \InvalidArgumentException(\sprintf(
+                'Unsupported architecture "%s"',
+                $this->arch->value,
+            )),
         };
     }
 
-    protected function getSfxArchivePathname(Configuration $config): string
+    protected function getSfxExtensionMapping(): array
     {
-        if (($sfx = $this->findCustomSfxPathname($config)) !== null) {
-            return $sfx;
-        }
+        return [
+            self::MINIMAL_EDITION => self::MINIMAL_SFX_EXTENSIONS,
+            self::STANDARD_EDITION => self::STANDARD_SFX_EXTENSIONS,
+        ];
+    }
 
+    /**
+     * @return non-empty-string
+     */
+    protected function getSfxFilename(string $edition): string
+    {
         return match ($this->arch) {
-            BuiltinArchitectureTarget::Amd64 => match (true) {
-                $this->isExtensionMatches($config, self::MINIMAL_SFX_EXTENSIONS)
-                    => __DIR__ . '/../../bin/minimal/linux-x86_64.sfx',
-                $this->isExtensionMatches($config, self::STANDARD_SFX_EXTENSIONS)
-                    => __DIR__ . '/../../bin/standard/linux-x86_64.sfx',
-                default => throw $this->missingExtensionsError(
-                    config: $config,
-                    actual: self::STANDARD_SFX_EXTENSIONS,
-                    platform: 'linux-x86_64-glibc',
-                ),
+            BuiltinArchitectureTarget::Amd64 => match ($edition) {
+                self::MINIMAL_EDITION => 'linux-x86_64.min.sfx',
+                self::STANDARD_EDITION => 'linux-x86_64.standard.sfx',
             },
-            /** @phpstan-ignore-next-line : Allow invalid architecture arm */
-            BuiltinArchitectureTarget::Arm64 => match (true) {
-                $this->isExtensionMatches($config, self::MINIMAL_SFX_EXTENSIONS)
-                    => __DIR__ . '/../../bin/minimal/linux-aarch64.sfx',
-                $this->isExtensionMatches($config, self::STANDARD_SFX_EXTENSIONS)
-                    => __DIR__ . '/../../bin/standard/linux-aarch64.sfx',
-                default => throw $this->missingExtensionsError(
-                    config: $config,
-                    actual: self::STANDARD_SFX_EXTENSIONS,
-                    platform: 'linux-aarch64-glibc',
-                ),
+            BuiltinArchitectureTarget::Arm64 => match ($edition) {
+                self::MINIMAL_EDITION => 'linux-aarch64.min.sfx',
+                self::STANDARD_EDITION => 'linux-aarch64.standard.sfx',
             },
-            default => throw $this->unsupportedArchitectureOfPlatform(
-                platform: BuiltinPlatformTarget::Linux,
-                arch: $this->arch,
-            ),
+            default => throw new \RuntimeException(\sprintf(
+                'Unsupported architecture "%s"',
+                $this->arch->value,
+            )),
         };
     }
 }

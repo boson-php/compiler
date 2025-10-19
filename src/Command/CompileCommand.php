@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Command;
 
-use Boson\Component\Compiler\Command\Presenter\CompileApplicationWorkflowPresenter;
-use Boson\Component\Compiler\Command\Presenter\PackApplicationWorkflowPresenter;
+use Boson\Component\Compiler\Configuration;
+use Boson\Component\Compiler\Workflow\CompileWorkflow;
+use Boson\Component\Compiler\Workflow\Task\TaskInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class CompileCommand extends ConfigAwareCommand
+final class CompileCommand extends WorkflowCommand
 {
     public function __construct(?string $name = null)
     {
@@ -31,43 +30,10 @@ final class CompileCommand extends ConfigAwareCommand
         );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function getWorkflow(InputInterface $input, Configuration $config): TaskInterface
     {
-        $config = $this->getConfiguration($input);
-
-        $style = new SymfonyStyle($input, $output);
-
-        // ---------------------------------------------------------------------
-        //  Pack Workflow
-        // ---------------------------------------------------------------------
-        if ($input->getOption('no-pack') !== true) {
-            $pack = new PackApplicationWorkflowPresenter();
-
-            try {
-                $pack->process($config, $style);
-            } catch (\Throwable $e) {
-                return $this->fail($output, $e);
-            }
-        } else {
-            $output->writeln(\sprintf(
-                ' · Use an existing "<comment>%s</comment>" build',
-                $config->pharPathname,
-            ));
-        }
-
-        $output->writeln(\sprintf(
-            ' · Build an application in "<comment>%s</comment>"',
-            $config->output,
-        ));
-
-        $compile = new CompileApplicationWorkflowPresenter();
-
-        try {
-            $compile->process($config, $style);
-        } catch (\Throwable $e) {
-            return $this->fail($output, $e);
-        }
-
-        return self::SUCCESS;
+        return new CompileWorkflow(
+            pack: $input->getOption('no-pack') !== true,
+        );
     }
 }

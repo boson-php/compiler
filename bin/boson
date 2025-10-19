@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler;
 
+use Boson\Component\Compiler\Command\PackCommand;
 use Boson\Component\Compiler\Command\CompileCommand;
 use Boson\Component\Compiler\Command\InitCommand;
-use Boson\Component\Compiler\Command\PackCommand;
 use Composer\InstalledVersions;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
@@ -40,20 +40,18 @@ use Symfony\Component\Console\Output\ConsoleOutput;
         return require $GLOBALS['_composer_autoload_path'];
     }
 
-    $files = [
-        __DIR__ . '/../../autoload.php',
-        __DIR__ . '/../autoload.php',
-        __DIR__ . '/../../vendor/autoload.php',
-        __DIR__ . '/../vendor/autoload.php',
-        __DIR__ . '/vendor/autoload.php',
-    ];
+    $directory = __DIR__;
 
-    foreach ($files as $autoloader) {
-        if (!\is_file($autoloader)) {
-            continue;
+    while (\dirname($directory) !== $directory) {
+        foreach ([$directory . '/autoload.php', $directory . '/vendor/autoload.php'] as $autoloader) {
+            if (!\is_file($autoloader)) {
+                continue;
+            }
+
+            return require $autoloader;
         }
 
-        return require $autoloader;
+        $directory = \dirname($directory);
     }
 
     throw new \LogicException('Unable to find the Composer autoloader');

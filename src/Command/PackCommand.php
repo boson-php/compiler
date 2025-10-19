@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Boson\Component\Compiler\Command;
 
-use Boson\Component\Compiler\Command\Presenter\PackApplicationWorkflowPresenter;
+use Boson\Component\Compiler\Configuration;
+use Boson\Component\Compiler\Workflow\PackWorkflow;
+use Boson\Component\Compiler\Workflow\Task\TaskInterface;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class PackCommand extends ConfigAwareCommand
+final class PackCommand extends WorkflowCommand
 {
     public function __construct(?string $name = null)
     {
@@ -23,20 +23,8 @@ final class PackCommand extends ConfigAwareCommand
         $this->setDescription('Pack application files to PHAR assembly');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function getWorkflow(InputInterface $input, Configuration $config): TaskInterface
     {
-        $config = $this->getConfiguration($input);
-
-        $style = new SymfonyStyle($input, $output);
-
-        $presenter = new PackApplicationWorkflowPresenter();
-
-        try {
-            $presenter->process($config, $style);
-        } catch (\Throwable $e) {
-            return $this->fail($output, $e);
-        }
-
-        return self::SUCCESS;
+        return new PackWorkflow();
     }
 }
