@@ -43,10 +43,13 @@ final readonly class ApplyPermissionsTask implements TaskInterface
      */
     private function permissionsToString(): string
     {
+        $permissions = \sprintf('%o', $this->permissions);
+        $permissions = \str_pad($permissions, 3, '0', \STR_PAD_LEFT);
+
         return match ($this->permissions) {
             self::DEFAULT_EXECUTE_PERMISSIONS => 'execute',
             self::DEFAULT_WRITE_PERMISSIONS => 'write',
-            default => \sprintf('0o%o', $this->permissions),
+            default => '0o' . $permissions,
         };
     }
 
@@ -74,7 +77,7 @@ final readonly class ApplyPermissionsTask implements TaskInterface
 
         $this->applyPermissions();
 
-        Task::notify('Added 0o%o permissions', [
+        Task::notify('Applied %s permissions', [
             $this->permissionsToString(),
         ]);
     }
